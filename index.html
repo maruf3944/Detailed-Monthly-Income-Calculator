@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Salary & OT Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+    <div class="bg-white rounded-3xl shadow-xl w-full max-w-2xl p-6 sm:p-8 lg:p-10">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2">Detailed Monthly Income Calculator</h1>
+        <p class="text-center text-gray-500 mb-8 text-sm sm:text-base">Calculate your estimated monthly income including overtime and deductions.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Gross Salary and OT Rate Inputs -->
+            <div class="space-y-6">
+                <div>
+                    <label for="gross-salary" class="block text-gray-700 font-medium mb-2">Gross Monthly Salary ($)</label>
+                    <div class="relative rounded-xl shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500">$</span>
+                        </div>
+                        <input type="number" id="gross-salary" value="25827" class="block w-full rounded-xl border-0 py-3 pl-8 pr-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-200" min="0">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="ot-rate" class="block text-gray-700 font-medium mb-2">OT Rate per Hour ($)</label>
+                    <div class="relative rounded-xl shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500">$</span>
+                        </div>
+                        <input type="number" id="ot-rate" value="151.33" class="block w-full rounded-xl border-0 py-3 pl-8 pr-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-200" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Month, Year, and Working Days Inputs -->
+            <div class="space-y-6">
+                <div>
+                    <label for="month-select" class="block text-gray-700 font-medium mb-2">Select Month</label>
+                    <select id="month-select" class="block w-full rounded-xl border-0 py-3 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-200">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+
+                <div>
+                    <label for="year-select" class="block text-gray-700 font-medium mb-2">Select Year</label>
+                    <select id="year-select" class="block w-full rounded-xl border-0 py-3 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-200">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="working-days" class="block text-gray-700 font-medium mb-2">Number of Working Days</label>
+                    <input type="number" id="working-days" placeholder="Auto-calculated if blank" class="block w-full rounded-xl border-0 py-3 px-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-200" min="0">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bonuses and Deductions Checkboxes -->
+        <div class="mt-6 space-y-4">
+            <h2 class="text-lg font-bold text-gray-800">Bonuses & Deductions</h2>
+            <div class="flex items-center">
+                <input id="attendance-bonus" type="checkbox" class="h-5 w-5 rounded-md border-gray-300 text-green-600 focus:ring-green-500 transition-all duration-200">
+                <label for="attendance-bonus" class="ml-2 block text-sm text-gray-900">Include Attendance Bonus ($525)</label>
+            </div>
+            <div class="flex items-center">
+                <input id="gildan-bonus" type="checkbox" class="h-5 w-5 rounded-md border-gray-300 text-green-600 focus:ring-green-500 transition-all duration-200">
+                <label for="gildan-bonus" class="ml-2 block text-sm text-gray-900">Include Gildan Bonus ($400)</label>
+            </div>
+            <div class="flex items-center">
+                <input id="provident-fund" type="checkbox" checked class="h-5 w-5 rounded-md border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-200">
+                <label for="provident-fund" class="ml-2 block text-sm text-gray-900">Include Provident Fund Deduction (4.2243% of gross salary)</label>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200 mt-8">
+            <h2 class="text-xl font-bold text-blue-800 mb-4">Detailed Breakdown</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col">
+                    <span class="text-lg font-medium text-blue-700">Gross Salary</span>
+                    <span id="gross-salary-display" class="text-2xl font-bold text-blue-600 transition-all duration-300">$25,827.00</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-lg font-medium text-blue-700">Total OT Pay</span>
+                    <span id="ot-pay-display" class="text-2xl font-bold text-blue-600 transition-all duration-300">$0.00</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-lg font-medium text-green-700">Attendance Bonus</span>
+                    <span id="attendance-bonus-display" class="text-2xl font-bold text-green-600 transition-all duration-300">+$0.00</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-lg font-medium text-green-700">Gildan Bonus</span>
+                    <span id="gildan-bonus-display" class="text-2xl font-bold text-green-600 transition-all duration-300">+$0.00</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-lg font-medium text-red-700">Provident Fund Deduction</span>
+                    <span id="provident-fund-display" class="text-2xl font-bold text-red-600 transition-all duration-300">-$0.00</span>
+                </div>
+                <div class="flex flex-col mt-2 pt-2 border-t border-blue-200 sm:col-span-2">
+                    <span class="text-lg font-medium text-blue-700">Total Net Income</span>
+                    <span id="total-income-display" class="text-3xl font-bold text-blue-600 transition-all duration-300">$25,827.00</span>
+                </div>
+            </div>
+        </div>
+        <p class="text-center text-xs text-gray-400 mt-4">This is a gross estimate based on your inputs. Actual take-home pay may vary due to taxes and other deductions.</p>
+    </div>
+
+    <script>
+        const grossSalaryInput = document.getElementById('gross-salary');
+        const otRateInput = document.getElementById('ot-rate');
+        const monthSelect = document.getElementById('month-select');
+        const yearSelect = document.getElementById('year-select');
+        const workingDaysInput = document.getElementById('working-days');
+        const providentFundCheckbox = document.getElementById('provident-fund');
+        const attendanceBonusCheckbox = document.getElementById('attendance-bonus');
+        const gildanBonusCheckbox = document.getElementById('gildan-bonus');
+        
+        const grossSalaryDisplay = document.getElementById('gross-salary-display');
+        const otPayDisplay = document.getElementById('ot-pay-display');
+        const providentFundDisplay = document.getElementById('provident-fund-display');
+        const attendanceBonusDisplay = document.getElementById('attendance-bonus-display');
+        const gildanBonusDisplay = document.getElementById('gildan-bonus-display');
+        const totalIncomeDisplay = document.getElementById('total-income-display');
+
+        // Populate month and year dropdowns
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const currentYear = new Date().getFullYear();
+
+        months.forEach((month, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = month;
+            monthSelect.appendChild(option);
+        });
+        monthSelect.value = new Date().getMonth();
+
+        for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            yearSelect.appendChild(option);
+        }
+        yearSelect.value = currentYear;
+
+        function calculateMonthlyIncome() {
+            const grossSalary = parseFloat(grossSalaryInput.value) || 0;
+            const otRate = parseFloat(otRateInput.value) || 0;
+            const dailyOTHours = 2;
+            const providentFundRate = 0.042243;
+            const attendanceBonus = 525;
+            const gildanBonus = 400;
+            
+            let workingDays;
+            // Use manually entered working days if available, otherwise calculate them
+            if (workingDaysInput.value && !isNaN(workingDaysInput.value)) {
+                workingDays = parseFloat(workingDaysInput.value);
+            } else {
+                const selectedMonth = parseInt(monthSelect.value);
+                const selectedYear = parseInt(yearSelect.value);
+                workingDays = 0;
+                const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const day = new Date(selectedYear, selectedMonth, i).getDay();
+                    // 1 = Monday, 5 = Friday
+                    if (day >= 1 && day <= 5) {
+                        workingDays++;
+                    }
+                }
+            }
+
+            const totalOTPay = workingDays * dailyOTHours * otRate;
+            let totalMonthlyIncome = grossSalary + totalOTPay;
+            let providentFundDeduction = 0;
+            let totalAttendanceBonus = 0;
+            let totalGildanBonus = 0;
+
+            if (providentFundCheckbox.checked) {
+                providentFundDeduction = grossSalary * providentFundRate;
+                totalMonthlyIncome -= providentFundDeduction;
+            }
+
+            if (attendanceBonusCheckbox.checked) {
+                totalAttendanceBonus = attendanceBonus;
+                totalMonthlyIncome += totalAttendanceBonus;
+            }
+
+            if (gildanBonusCheckbox.checked) {
+                totalGildanBonus = gildanBonus;
+                totalMonthlyIncome += totalGildanBonus;
+            }
+
+            // Update display
+            grossSalaryDisplay.textContent = `$${grossSalary.toFixed(2)}`;
+            otPayDisplay.textContent = `$${totalOTPay.toFixed(2)}`;
+            providentFundDisplay.textContent = `-$${providentFundDeduction.toFixed(2)}`;
+            attendanceBonusDisplay.textContent = `+$${totalAttendanceBonus.toFixed(2)}`;
+            gildanBonusDisplay.textContent = `+$${totalGildanBonus.toFixed(2)}`;
+            totalIncomeDisplay.textContent = `$${totalMonthlyIncome.toFixed(2)}`;
+        }
+
+        grossSalaryInput.addEventListener('input', calculateMonthlyIncome);
+        otRateInput.addEventListener('input', calculateMonthlyIncome);
+        monthSelect.addEventListener('change', calculateMonthlyIncome);
+        yearSelect.addEventListener('change', calculateMonthlyIncome);
+        workingDaysInput.addEventListener('input', calculateMonthlyIncome);
+        providentFundCheckbox.addEventListener('change', calculateMonthlyIncome);
+        attendanceBonusCheckbox.addEventListener('change', calculateMonthlyIncome);
+        gildanBonusCheckbox.addEventListener('change', calculateMonthlyIncome);
+
+
+        // Initial calculation on page load
+        calculateMonthlyIncome();
+    </script>
+</body>
+</html>
