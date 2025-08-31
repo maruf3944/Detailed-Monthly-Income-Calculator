@@ -19,7 +19,7 @@
         <p class="text-center text-gray-500 mb-8 text-sm sm:text-base">Calculate your estimated monthly income including overtime and deductions.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Gross Salary and OT Rate Inputs -->
+            <!-- Gross Salary, OT Rate, and Increment Inputs -->
             <div class="space-y-6">
                 <div>
                     <label for="gross-salary" class="block text-gray-700 font-medium mb-2">Gross Monthly Salary ($)</label>
@@ -38,6 +38,16 @@
                             <span class="text-gray-500">$</span>
                         </div>
                         <input type="number" id="ot-rate" class="block w-full rounded-xl border-0 py-3 pl-8 pr-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-200" min="0">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="percent-increment" class="block text-gray-700 font-medium mb-2">Percent Increment (%)</label>
+                    <div class="relative rounded-xl shadow-sm">
+                        <input type="number" id="percent-increment" placeholder="e.g., 5" class="block w-full rounded-xl border-0 py-3 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-200" min="0">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500">%</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -103,6 +113,10 @@
                     <span id="gildan-bonus-display" class="text-2xl font-bold text-green-600 transition-all duration-300">+$0.00</span>
                 </div>
                 <div class="flex flex-col">
+                    <span class="text-lg font-medium text-green-700">Increment Pay</span>
+                    <span id="increment-pay-display" class="text-2xl font-bold text-green-600 transition-all duration-300">+$0.00</span>
+                </div>
+                <div class="flex flex-col">
                     <span class="text-lg font-medium text-red-700">Provident Fund Deduction</span>
                     <span id="provident-fund-display" class="text-2xl font-bold text-red-600 transition-all duration-300">-$0.00</span>
                 </div>
@@ -118,6 +132,7 @@
     <script>
         const grossSalaryInput = document.getElementById('gross-salary');
         const otRateInput = document.getElementById('ot-rate');
+        const percentIncrementInput = document.getElementById('percent-increment');
         const monthSelect = document.getElementById('month-select');
         const yearSelect = document.getElementById('year-select');
         const workingDaysInput = document.getElementById('working-days');
@@ -127,6 +142,7 @@
         
         const grossSalaryDisplay = document.getElementById('gross-salary-display');
         const otPayDisplay = document.getElementById('ot-pay-display');
+        const incrementPayDisplay = document.getElementById('increment-pay-display');
         const providentFundDisplay = document.getElementById('provident-fund-display');
         const attendanceBonusDisplay = document.getElementById('attendance-bonus-display');
         const gildanBonusDisplay = document.getElementById('gildan-bonus-display');
@@ -155,6 +171,7 @@
         function calculateMonthlyIncome() {
             const grossSalary = parseFloat(grossSalaryInput.value) || 0;
             const otRate = parseFloat(otRateInput.value) || 0;
+            const percentIncrement = parseFloat(percentIncrementInput.value) || 0;
             const dailyOTHours = 2;
             const providentFundRate = 0.042243;
             const attendanceBonus = 525;
@@ -183,6 +200,7 @@
             let providentFundDeduction = 0;
             let totalAttendanceBonus = 0;
             let totalGildanBonus = 0;
+            let totalIncrementPay = 0;
 
             if (providentFundCheckbox.checked) {
                 providentFundDeduction = grossSalary * providentFundRate;
@@ -199,24 +217,30 @@
                 totalMonthlyIncome += totalGildanBonus;
             }
 
+            if (percentIncrement > 0) {
+                totalIncrementPay = grossSalary * (percentIncrement / 100);
+                totalMonthlyIncome += totalIncrementPay;
+            }
+
             // Update display
             grossSalaryDisplay.textContent = `$${grossSalary.toFixed(2)}`;
             otPayDisplay.textContent = `$${totalOTPay.toFixed(2)}`;
             providentFundDisplay.textContent = `-$${providentFundDeduction.toFixed(2)}`;
             attendanceBonusDisplay.textContent = `+$${totalAttendanceBonus.toFixed(2)}`;
             gildanBonusDisplay.textContent = `+$${totalGildanBonus.toFixed(2)}`;
+            incrementPayDisplay.textContent = `+$${totalIncrementPay.toFixed(2)}`;
             totalIncomeDisplay.textContent = `$${totalMonthlyIncome.toFixed(2)}`;
         }
 
         grossSalaryInput.addEventListener('input', calculateMonthlyIncome);
         otRateInput.addEventListener('input', calculateMonthlyIncome);
+        percentIncrementInput.addEventListener('input', calculateMonthlyIncome);
         monthSelect.addEventListener('change', calculateMonthlyIncome);
         yearSelect.addEventListener('change', calculateMonthlyIncome);
         workingDaysInput.addEventListener('input', calculateMonthlyIncome);
         providentFundCheckbox.addEventListener('change', calculateMonthlyIncome);
         attendanceBonusCheckbox.addEventListener('change', calculateMonthlyIncome);
         gildanBonusCheckbox.addEventListener('change', calculateMonthlyIncome);
-
 
         // Initial calculation on page load
         calculateMonthlyIncome();
