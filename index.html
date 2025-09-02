@@ -11,12 +11,29 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
+        .expense-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f9fafb;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .expense-item span:first-child {
+            font-weight: 500;
+            color: #4b5563;
+        }
+        .expense-item span:last-child {
+            font-weight: 700;
+            color: #ef4444;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
     <div class="bg-white rounded-3xl shadow-xl w-full max-w-2xl p-6 sm:p-8 lg:p-10">
         <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2">Detailed Monthly Income Calculator</h1>
-        <p class="text-center text-gray-500 mb-8 text-sm sm:text-base">Calculate your estimated monthly income including overtime and deductions.</p>
+        <p class="text-center text-gray-500 mb-8 text-sm sm:text-base">Calculate your estimated monthly income and deduct your expenses to see your final balance.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Gross Salary, OT Rate, and Increment Inputs -->
@@ -74,7 +91,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Bonuses and Deductions Checkboxes -->
         <div class="mt-6 space-y-4">
             <h2 class="text-lg font-bold text-gray-800">Bonuses & Deductions</h2>
@@ -89,6 +106,34 @@
             <div class="flex items-center">
                 <input id="provident-fund" type="checkbox" checked class="h-5 w-5 rounded-md border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-200">
                 <label for="provident-fund" class="ml-2 block text-sm text-gray-900">Include Provident Fund Deduction (4.2243% of gross salary)</label>
+            </div>
+        </div>
+
+        <!-- Dynamic Expenses Section -->
+        <div class="bg-red-50 rounded-2xl p-6 border border-red-200 mt-8">
+            <h2 class="text-xl font-bold text-red-800 mb-4">Add Your Monthly Expenses</h2>
+            <div class="space-y-4 mb-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="expense-name" class="block text-gray-700 font-medium mb-2">Expense Name</label>
+                        <input type="text" id="expense-name" class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-red-600 transition-all duration-200" placeholder="e.g., Rent">
+                    </div>
+                    <div>
+                        <label for="expense-amount" class="block text-gray-700 font-medium mb-2">Amount ($)</label>
+                        <div class="relative rounded-xl shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500">$</span>
+                            </div>
+                            <input type="number" id="expense-amount" class="block w-full rounded-xl border-0 py-2.5 pl-8 pr-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-red-600 transition-all duration-200" min="0">
+                        </div>
+                    </div>
+                </div>
+                <button id="add-expense-btn" class="w-full bg-red-600 text-white font-semibold py-2.5 rounded-xl shadow-md hover:bg-red-700 transition-all duration-200">Add Expense</button>
+            </div>
+
+            <!-- Expense List -->
+            <div id="expense-list-container" class="space-y-2">
+                <!-- Expenses will be dynamically added here -->
             </div>
         </div>
 
@@ -120,9 +165,17 @@
                     <span class="text-lg font-medium text-red-700">Provident Fund Deduction</span>
                     <span id="provident-fund-display" class="text-2xl font-bold text-red-600 transition-all duration-300">-$0.00</span>
                 </div>
-                <div class="flex flex-col mt-2 pt-2 border-t border-blue-200 sm:col-span-2">
-                    <span class="text-lg font-medium text-blue-700">Total Net Income</span>
+                <div class="flex flex-col pt-2 border-t border-blue-200 col-span-2">
+                    <span class="text-lg font-medium text-blue-700">Net Income (Before Expenses)</span>
                     <span id="total-income-display" class="text-3xl font-bold text-blue-600 transition-all duration-300">$0.00</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-lg font-medium text-red-700">Total Expenses</span>
+                    <span id="total-expenses-display" class="text-2xl font-bold text-red-600 transition-all duration-300">-$0.00</span>
+                </div>
+                <div class="flex flex-col pt-2 border-t border-blue-200 col-span-2">
+                    <span class="text-lg font-medium text-blue-700">Final Balance</span>
+                    <span id="final-balance-display" class="text-3xl font-bold text-blue-600 transition-all duration-300">$0.00</span>
                 </div>
             </div>
         </div>
@@ -136,17 +189,25 @@
         const monthSelect = document.getElementById('month-select');
         const yearSelect = document.getElementById('year-select');
         const workingDaysInput = document.getElementById('working-days');
+        const addExpenseBtn = document.getElementById('add-expense-btn');
+        const expenseNameInput = document.getElementById('expense-name');
+        const expenseAmountInput = document.getElementById('expense-amount');
+        const expenseListContainer = document.getElementById('expense-list-container');
         const providentFundCheckbox = document.getElementById('provident-fund');
         const attendanceBonusCheckbox = document.getElementById('attendance-bonus');
         const gildanBonusCheckbox = document.getElementById('gildan-bonus');
-        
+
         const grossSalaryDisplay = document.getElementById('gross-salary-display');
         const otPayDisplay = document.getElementById('ot-pay-display');
         const incrementPayDisplay = document.getElementById('increment-pay-display');
         const providentFundDisplay = document.getElementById('provident-fund-display');
         const attendanceBonusDisplay = document.getElementById('attendance-bonus-display');
         const gildanBonusDisplay = document.getElementById('gildan-bonus-display');
+        const totalExpensesDisplay = document.getElementById('total-expenses-display');
         const totalIncomeDisplay = document.getElementById('total-income-display');
+        const finalBalanceDisplay = document.getElementById('final-balance-display');
+
+        let expenses = [];
 
         // Populate month and year dropdowns
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -168,6 +229,19 @@
         }
         yearSelect.value = currentYear;
 
+        function renderExpenses() {
+            expenseListContainer.innerHTML = '';
+            expenses.forEach((expense, index) => {
+                const item = document.createElement('div');
+                item.className = 'expense-item';
+                item.innerHTML = `
+                    <span>${expense.name}</span>
+                    <span>-$${expense.amount.toFixed(2)}</span>
+                `;
+                expenseListContainer.appendChild(item);
+            });
+        }
+
         function calculateMonthlyIncome() {
             const grossSalary = parseFloat(grossSalaryInput.value) || 0;
             const otRate = parseFloat(otRateInput.value) || 0;
@@ -176,6 +250,8 @@
             const providentFundRate = 0.042243;
             const attendanceBonus = 525;
             const gildanBonus = 400;
+
+            let totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
             
             let workingDays;
             // Use manually entered working days if available, otherwise calculate them
@@ -221,6 +297,9 @@
                 totalIncrementPay = grossSalary * (percentIncrement / 100);
                 totalMonthlyIncome += totalIncrementPay;
             }
+            
+            // Calculate final balance after expenses
+            let finalBalance = totalMonthlyIncome - totalExpenses;
 
             // Update display
             grossSalaryDisplay.textContent = `$${grossSalary.toFixed(2)}`;
@@ -229,18 +308,27 @@
             attendanceBonusDisplay.textContent = `+$${totalAttendanceBonus.toFixed(2)}`;
             gildanBonusDisplay.textContent = `+$${totalGildanBonus.toFixed(2)}`;
             incrementPayDisplay.textContent = `+$${totalIncrementPay.toFixed(2)}`;
+            totalExpensesDisplay.textContent = `-$${totalExpenses.toFixed(2)}`;
             totalIncomeDisplay.textContent = `$${totalMonthlyIncome.toFixed(2)}`;
+            finalBalanceDisplay.textContent = `$${finalBalance.toFixed(2)}`;
         }
 
-        grossSalaryInput.addEventListener('input', calculateMonthlyIncome);
-        otRateInput.addEventListener('input', calculateMonthlyIncome);
-        percentIncrementInput.addEventListener('input', calculateMonthlyIncome);
+        addExpenseBtn.addEventListener('click', () => {
+            const name = expenseNameInput.value.trim();
+            const amount = parseFloat(expenseAmountInput.value);
+            if (name && !isNaN(amount) && amount > 0) {
+                expenses.push({ name, amount });
+                expenseNameInput.value = '';
+                expenseAmountInput.value = '';
+                renderExpenses();
+                calculateMonthlyIncome();
+            }
+        });
+
+        const inputs = [grossSalaryInput, otRateInput, percentIncrementInput, workingDaysInput, providentFundCheckbox, attendanceBonusCheckbox, gildanBonusCheckbox];
+        inputs.forEach(input => input.addEventListener('input', calculateMonthlyIncome));
         monthSelect.addEventListener('change', calculateMonthlyIncome);
         yearSelect.addEventListener('change', calculateMonthlyIncome);
-        workingDaysInput.addEventListener('input', calculateMonthlyIncome);
-        providentFundCheckbox.addEventListener('change', calculateMonthlyIncome);
-        attendanceBonusCheckbox.addEventListener('change', calculateMonthlyIncome);
-        gildanBonusCheckbox.addEventListener('change', calculateMonthlyIncome);
 
         // Initial calculation on page load
         calculateMonthlyIncome();
