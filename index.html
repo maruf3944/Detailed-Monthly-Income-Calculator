@@ -34,7 +34,8 @@
     <div class="bg-white rounded-3xl shadow-xl w-full max-w-2xl p-6 sm:p-8 lg:p-10">
         <!-- Logo Added Here -->
         <div class="flex justify-center mb-6">
-            <img src="uploaded:GILDAN-Logo.png" alt="Gildan Logo" class="h-10 sm:h-12 w-auto">
+            <!-- Corrected logo path to reference the uploaded file directly -->
+            <img src="GILDAN-Logo.png" alt="Gildan Logo" class="h-10 sm:h-12 w-auto">
         </div>
         
         <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2">Gildan Monthly Income Calculator</h1>
@@ -273,6 +274,7 @@
         }
         yearSelect.value = currentYear;
 
+        // Function to render the list of expenses in the UI
         function renderExpenses() {
             expenseListContainer.innerHTML = '';
             expenses.forEach((expense, index) => {
@@ -296,6 +298,7 @@
                 `;
                 expenseListContainer.appendChild(item);
             });
+            // Add event listeners to the new buttons
             document.querySelectorAll('.edit-expense-btn').forEach(button => {
                 button.addEventListener('click', handleEditExpense);
             });
@@ -304,6 +307,7 @@
             });
         }
 
+        // Function to handle editing an expense
         function handleEditExpense(event) {
             const indexToEdit = parseInt(event.currentTarget.dataset.index);
             const expenseToEdit = expenses[indexToEdit];
@@ -317,6 +321,7 @@
             }
         }
         
+        // Function to handle adding or updating an expense
         function addOrUpdateExpense(name, amount) {
             if (editingIndex > -1) {
                 expenses[editingIndex] = { name, amount };
@@ -331,6 +336,7 @@
             calculateMonthlyIncome();
         }
 
+        // Function to handle deleting an expense
         function deleteExpense(index) {
             expenses.splice(index, 1);
             renderExpenses();
@@ -399,12 +405,12 @@
             
             let finalBalance = totalMonthlyIncome - totalExpenses;
 
+            // Update display elements
             basicSalaryDisplay.textContent = `$${basicSalary.toFixed(2)}`;
             houseRentDisplay.textContent = `$${houseRent.toFixed(2)}`;
             medicalDisplay.textContent = `$${medical.toFixed(2)}`;
             foodDisplay.textContent = `$${food.toFixed(2)}`;
             transportationCostDisplay.textContent = `$${transportationCost.toFixed(2)}`;
-
             otPayDisplay.textContent = `$${totalOTPay.toFixed(2)}`;
             providentFundDisplay.textContent = `-$${providentFundDeduction.toFixed(2)}`;
             attendanceBonusDisplay.textContent = `+$${totalAttendanceBonus.toFixed(2)}`;
@@ -415,6 +421,7 @@
             finalBalanceDisplay.textContent = `$${finalBalance.toFixed(2)}`;
         }
 
+        // Event listeners
         addExpenseBtn.addEventListener('click', () => {
             const name = expenseNameInput.value.trim();
             const amount = parseFloat(expenseAmountInput.value);
@@ -433,16 +440,17 @@
             }
         });
 
+        // Event listeners for all inputs and checkboxes
         const inputs = [grossSalaryInput, otRateInput, percentIncrementInput, workingDaysInput, providentFundCheckbox, attendanceBonusCheckbox, gildanBonusCheckbox];
         inputs.forEach(input => input.addEventListener('input', calculateMonthlyIncome));
         monthSelect.addEventListener('change', calculateMonthlyIncome);
         yearSelect.addEventListener('change', calculateMonthlyIncome);
 
-        // Initial rendering on page load
-        window.onload = () => {
+        // Initial calculation on page load
+        document.addEventListener('DOMContentLoaded', () => {
             renderExpenses();
             calculateMonthlyIncome();
-        };
+        });
     </script>
 </body>
 </html>
