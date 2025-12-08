@@ -1,456 +1,542 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gildan Monthly Income Calculator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .expense-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: #f9fafb;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-        .expense-item span:first-child {
-            font-weight: 500;
-            color: #4b5563;
-        }
-        .expense-item span:last-child {
-            font-weight: 700;
-            color: #ef4444;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
+  <title>Gildan Monthly Income Calculator</title>
+
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind (optional utilities) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* ---------- High-res / crisp rendering ---------- */
+    html,body { -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
+    body { margin:0; font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,#f7fbff 0%, #eef6ff 100%); color:#071220; -webkit-text-size-adjust:100%; -webkit-transform: translateZ(0); }
+
+    :root {
+      --muted: #64748b;
+      --accent: #2563eb;
+      --success: #059669; /* green */
+      --danger: #dc2626;  /* red */
+      --card-radius: 16px;
+      --shadow-sm: 0 6px 18px rgba(3,10,22,0.06);
+      --shadow-lg: 0 12px 40px rgba(3,10,22,0.08);
+    }
+
+    /* container */
+    .page-wrap { display:flex; justify-content:center; align-items:flex-start; padding:40px 20px; gap:20px; }
+    .card-main { width:100%; max-width:980px; border-radius:20px; background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,251,0.96)); border:1px solid rgba(8,16,40,0.04); box-shadow:var(--shadow-sm); padding:28px; backdrop-filter: blur(6px) saturate(120%); transition: transform .2s ease, box-shadow .2s ease; }
+    .card-main:hover{ box-shadow:var(--shadow-lg); transform: translateY(-2px); }
+
+    /* header */
+    .top-brand { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; margin-bottom:10px; }
+    .brand-logo { height:70px; width:auto; }
+    .title { font-size:28px; font-weight:700; line-height:1.02; color:#07122a; letter-spacing:-0.3px; text-align:center; }
+    .subtitle { color:var(--muted); font-size:14px; text-align:center; margin-top:6px; }
+
+    /* layout */
+    .grid-2 { display:grid; grid-template-columns: 1fr 360px; gap:22px; align-items:start; margin-top:18px; }
+    @media (max-width:980px){ .grid-2{ grid-template-columns:1fr; } }
+
+    .panel { background: rgba(255,255,255,0.98); border-radius:14px; padding:18px; border:1px solid rgba(8,16,40,0.04); box-shadow:0 4px 18px rgba(8,16,40,0.03); }
+    .panel h3{ font-size:16px; font-weight:600; color:#07122a; margin-bottom:10px; }
+
+    .field { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+    label.field-label { font-size:13px; font-weight:600; color:#334155; }
+
+    input.uniform, select.uniform {
+      width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(10,20,40,0.06); font-size:15px;
+      background:white; outline:none; transition: box-shadow .12s ease, border-color .12s ease, transform .08s ease;
+    }
+    input.uniform::placeholder, select.uniform::placeholder { color:#94a3b8; }
+    input.uniform:focus, select.uniform:focus { border-color: rgba(37,99,235,0.9); box-shadow: 0 8px 26px rgba(37,99,235,0.06); transform: translateY(-1px); }
+
+    .with-prefix { position:relative; }
+    .with-prefix .prefix { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:15px; pointer-events:none; }
+    .with-prefix input.uniform{ padding-left:44px; }
+
+    .checks { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+
+    /* ---------- Glass pill (Add Expense) ---------- */
+    .pill-bar { margin-top:14px; display:flex; align-items:center; width:100%; border-radius:999px; padding:8px; background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4)); box-shadow: 0 8px 20px rgba(3,10,40,0.06); border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(10px) saturate(120%); gap:8px; }
+    .pill-section { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:999px; min-height:48px; }
+    .pill-left { flex:1; min-width:120px; background: rgba(255,255,255,0.20); }
+    .pill-middle { width:140px; justify-content:center; background: rgba(255,255,255,0.12); }
+    .pill-right { width:110px; justify-content:center; background:transparent; }
+
+    .pill-input { border:none; outline:none; background:transparent; font-size:15px; width:100%; color:#07122a; }
+    .pill-input::placeholder{ color:#94a3b8; }
+
+    .pill-divider { width:1px; height:28px; background: rgba(8,16,40,0.04); border-radius:2px; margin:0 6px; }
+
+    .pill-add { display:inline-flex; align-items:center; justify-content:center; gap:8px; background: linear-gradient(180deg,#2563eb,#1e40af); color:white; padding:10px 18px; border-radius:999px; font-weight:700; cursor:pointer; border:none; min-height:44px; box-shadow:0 10px 26px rgba(37,99,235,0.12); transition: transform .12s ease, box-shadow .12s ease; }
+    .pill-add:hover{ transform: translateY(-3px); box-shadow: 0 14px 36px rgba(37,99,235,0.16); }
+
+    /* expense list */
+    .expense-list { margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+    .expense-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg,#ffffff,#fbfdff); border:1px solid rgba(8,16,40,0.04); }
+    .expense-left{ display:flex; gap:12px; align-items:center; }
+    .expense-name{ font-weight:600; color:#07122a; font-size:14px; max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .expense-amount{ font-weight:700; color:var(--danger); }
+    .small-icon{ width:40px; height:40px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(8,16,40,0.06); background:linear-gradient(180deg,#fff,#fbfdff); cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; }
+    .small-icon:hover{ transform:translateY(-3px); box-shadow:0 10px 30px rgba(3,10,40,0.06); }
+
+    /* ---------- Detailed Breakdown (restored style) ---------- */
+    .summary-wrap { display:flex; flex-direction:column; gap:12px; }
+    .summary-card { background:white; border-radius:12px; padding:12px; border:1px solid rgba(8,16,40,0.04); box-shadow: 0 4px 18px rgba(8,16,40,0.02); }
+    .summary-row { display:flex; justify-content:space-between; align-items:center; padding:10px 6px; border-bottom:1px solid rgba(8,16,40,0.03); }
+    .summary-row:last-child { border-bottom:0; }
+    .summary-label { color:#0b1220; font-weight:500; }
+    .summary-value { color:#0b1220; font-weight:700; }
+
+    .summary-highlight { font-weight:800; font-size:16px; color:var(--accent); }   /* Net Income blue */
+    .summary-final { font-weight:900; font-size:18px; color:var(--danger); }      /* Final Balance red */
+    .summary-expense { font-weight:700; font-size:14px; color:var(--success); }   /* Total Expenses green */
+
+    @media (max-width:720px){
+      .grid-2{ grid-template-columns: 1fr; }
+      .pill-middle{ width:120px; }
+      .pill-right{ width:100px; }
+    }
+  </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
-    <div class="bg-white rounded-3xl shadow-xl w-full max-w-2xl p-6 sm:p-8 lg:p-10">
-        <!-- Logo Added Here -->
-        <div class="flex justify-center mb-6">
-            <!-- Corrected logo path to reference the uploaded file directly -->
-            <img src="GILDAN-Logo.png" alt="Gildan Logo" class="h-10 sm:h-12 w-auto">
-        </div>
-        
-        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-2">Gildan Monthly Income Calculator</h1>
-        <p class="text-center text-gray-500 mb-8 text-sm sm:text-base">Calculate your estimated monthly income and deduct your expenses to see your final balance.</p>
+<body>
+  <div class="page-wrap">
+    <main class="card-main" role="main" aria-labelledby="app-title">
+      <div class="top-brand">
+        <img src="GILDAN-Logo.png" alt="Gildan Logo" class="brand-logo" />
+        <div id="app-title" class="title">Gildan Monthly Income Calculator</div>
+        <div class="subtitle">Calculate your estimated monthly income and deduct your expenses to see your final balance.</div>
+      </div>
 
-        <div id="app-content">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Total Monthly Salary, OT Rate, and Increment Inputs -->
-                <div class="space-y-6">
-                    <div>
-                        <label for="gross-salary" class="block text-gray-700 font-medium mb-2">Total Monthly Salary ($)</label>
-                        <div class="relative rounded-xl shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500">$</span>
-                            </div>
-                            <input type="number" id="gross-salary" class="block w-full rounded-xl border-0 py-3 pl-8 pr-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-300 ease-in-out" min="0">
-                        </div>
-                    </div>
-    
-                    <div>
-                        <label for="ot-rate" class="block text-gray-700 font-medium mb-2">OT Rate per Hour ($)</label>
-                        <div class="relative rounded-xl shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500">$</span>
-                            </div>
-                            <input type="number" id="ot-rate" class="block w-full rounded-xl border-0 py-3 pl-8 pr-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-300 ease-in-out" min="0">
-                        </div>
-                    </div>
-    
-                    <div>
-                        <label for="percent-increment" class="block text-gray-700 font-medium mb-2">Percent Increment (%)</label>
-                        <div class="relative rounded-xl shadow-sm">
-                            <input type="number" id="percent-increment" placeholder="e.g., 5" class="block w-full rounded-xl border-0 py-3 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-300 ease-in-out" min="0">
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500">%</span>
-                            </div>
-                        </div>
-                    </div>
+      <div class="grid-2">
+        <!-- LEFT: form & pill -->
+        <section>
+          <div class="panel">
+            <h3>Salary & Settings</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="field">
+                <label class="field-label">Total Monthly Salary ($)</label>
+                <div class="with-prefix">
+                  <span class="prefix">$</span>
+                  <input id="gross-salary" class="uniform" type="number" step="0.01" placeholder="" inputmode="decimal" />
                 </div>
-    
-                <!-- Month, Year, and Working Days Inputs -->
-                <div class="space-y-6">
-                    <div>
-                        <label for="month-select" class="block text-gray-700 font-medium mb-2">Select Month</label>
-                        <select id="month-select" class="block w-full rounded-xl border-0 py-3 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-300 ease-in-out">
-                            <!-- Options will be populated by JavaScript -->
-                        </select>
-                    </div>
-    
-                    <div>
-                        <label for="year-select" class="block text-gray-700 font-medium mb-2">Select Year</label>
-                        <select id="year-select" class="block w-full rounded-xl border-0 py-3 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-300 ease-in-out">
-                            <!-- Options will be populated by JavaScript -->
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label for="working-days" class="block text-gray-700 font-medium mb-2">Number of Working Days</label>
-                        <input type="number" id="working-days" placeholder="Auto-calculated if blank" class="block w-full rounded-xl border-0 py-3 px-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 transition-all duration-300 ease-in-out" min="0">
-                    </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Select Month</label>
+                <select id="month-select" class="uniform"></select>
+              </div>
+
+              <div class="field">
+                <label class="field-label">OT Rate per Hour ($)</label>
+                <div class="input-row" style="align-items:center;">
+                  <div style="flex:1" class="with-prefix">
+                    <span class="prefix">$</span>
+                    <input id="ot-rate" class="uniform" type="number" step="0.01" placeholder="" inputmode="decimal" />
+                  </div>
+                  <div style="width:86px; display:flex; align-items:center;">
+                    <label style="display:flex; gap:8px; align-items:center;">
+                      <input id="auto-ot" type="checkbox" checked />
+                      <span style="font-weight:600; color:#475569;">Auto</span>
+                    </label>
+                  </div>
                 </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Select Year</label>
+                <select id="year-select" class="uniform"></select>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Percent Increment (%)</label>
+                <input id="percent-increment" class="uniform" type="number" step="0.01" placeholder="e.g., 5" />
+              </div>
+
+              <div class="field">
+                <label class="field-label">Number of Working Days</label>
+                <input id="working-days" class="uniform" type="number" placeholder="Auto-calculated if blank" />
+              </div>
             </div>
-    
-            <!-- Bonuses and Deductions Checkboxes -->
-            <div class="mt-6 space-y-4">
-                <h2 class="text-lg font-bold text-gray-800">Bonuses & Deductions</h2>
-                <div class="flex items-center">
-                    <input id="attendance-bonus" type="checkbox" class="h-5 w-5 rounded-md border-gray-300 text-green-600 focus:ring-green-500 transition-all duration-300 ease-in-out">
-                    <label for="attendance-bonus" class="ml-2 block text-sm text-gray-900">Include Attendance Bonus ($525)</label>
-                </div>
-                <div class="flex items-center">
-                    <input id="gildan-bonus" type="checkbox" class="h-5 w-5 rounded-md border-gray-300 text-green-600 focus:ring-green-500 transition-all duration-300 ease-in-out">
-                    <label for="gildan-bonus" class="ml-2 block text-sm text-gray-900">Include Gildan Bonus ($400)</label>
-                </div>
-                <div class="flex items-center">
-                    <input id="provident-fund" type="checkbox" checked class="h-5 w-5 rounded-md border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-300 ease-in-out">
-                    <label for="provident-fund" class="ml-2 block text-sm text-gray-900">Include Provident Fund Deduction (7% of basic salary)</label>
-                </div>
-                <div class="flex items-center">
-                    <input id="show-gross-breakdown" type="checkbox" class="h-5 w-5 rounded-md border-gray-300 text-blue-600 focus:ring-blue-500 transition-all duration-300 ease-in-out">
-                    <label for="show-gross-breakdown" class="ml-2 block text-sm text-gray-900">Show Salary Breakdown</label>
-                </div>
+
+            <div style="margin-top:12px;">
+              <h3 style="font-size:14px; margin-bottom:8px;">Bonuses & Deductions</h3>
+              <div class="checks">
+                <label><input id="attendance-bonus" type="checkbox" /> <span style="font-weight:600; margin-left:8px;">Include Attendance Bonus ($525)</span></label>
+                <label><input id="gildan-bonus" type="checkbox" /> <span style="font-weight:600; margin-left:8px;">Include Gildan Bonus ($400)</span></label>
+                <label><input id="provident-fund" type="checkbox" checked /> <span style="font-weight:600; margin-left:8px;">Include Provident Fund (7% of basic)</span></label>
+                <label><input id="show-gross-breakdown" type="checkbox" /> <span style="font-weight:600; margin-left:8px;">Show Salary Breakdown</span></label>
+              </div>
             </div>
-    
-            <!-- Dynamic Expenses Section -->
-            <div class="bg-red-50 rounded-2xl p-6 border border-red-200 mt-8">
-                <h2 class="text-xl font-bold text-red-800 mb-4">Add Your Monthly Expenses</h2>
-                <div class="space-y-4 mb-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="expense-name" class="block text-gray-700 font-medium mb-2">Expense Name</label>
-                            <input type="text" id="expense-name" class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-red-600 transition-all duration-300 ease-in-out" placeholder="e.g., Rent">
-                        </div>
-                        <div>
-                            <label for="expense-amount" class="block text-gray-700 font-medium mb-2">Amount ($)</label>
-                            <div class="relative rounded-xl shadow-sm">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500">$</span>
-                                </div>
-                                <input type="number" id="expense-amount" class="block w-full rounded-xl border-0 py-2.5 pl-8 pr-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-red-600 transition-all duration-300 ease-in-out" min="0">
-                            </div>
-                        </div>
-                    </div>
-                    <button id="add-expense-btn" class="w-full bg-red-600 text-white font-semibold py-2.5 rounded-xl shadow-md hover:bg-red-700 transition-all duration-300 ease-in-out">Add Expense</button>
-                </div>
-    
-                <!-- Expense List -->
-                <div id="expense-list-container" class="space-y-2">
-                    <!-- Expenses will be dynamically added here -->
-                </div>
+
+            <!-- Glass pill bar -->
+            <div class="pill-bar" aria-label="Add expense pill">
+              <div class="pill-section pill-left">
+                <input id="expense-name" class="pill-input" type="text" placeholder="Expense name (e.g., Rent)" />
+              </div>
+
+              <div class="pill-divider" aria-hidden="true"></div>
+
+              <div class="pill-section pill-middle">
+                <span style="color:#94a3b8;font-weight:600;">$</span>
+                <input id="expense-amount" class="pill-input" type="number" placeholder="0.00" inputmode="decimal" style="width:100%;" />
+              </div>
+
+              <div class="pill-divider" aria-hidden="true"></div>
+
+              <div class="pill-section pill-right" style="background:transparent;">
+                <button id="add-expense-btn" class="pill-add" aria-label="Add expense">Add</button>
+              </div>
             </div>
-    
-            <!-- Results Section -->
-            <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200 mt-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-blue-800">Detailed Breakdown</h2>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Gross salary breakdown details (hidden by default) -->
-                    <div id="gross-breakdown-container" class="contents hidden">
-                        <div class="flex flex-col">
-                            <span class="text-lg font-medium text-blue-700">Basic Salary</span>
-                            <span id="basic-salary-display" class="text-2xl font-bold text-blue-600 transition-all duration-300 ease-in-out">$0.00</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-lg font-medium text-blue-700">House Rent</span>
-                            <span id="house-rent-display" class="text-2xl font-bold text-blue-600 transition-all duration-300 ease-in-out">$0.00</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-lg font-medium text-blue-700">Medical</span>
-                            <span id="medical-display" class="text-2xl font-bold text-blue-600 transition-all duration-300 ease-in-out">$0.00</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-lg font-medium text-blue-700">Food</span>
-                            <span id="food-display" class="text-2xl font-bold text-blue-600 transition-all duration-300 ease-in-out">$0.00</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-lg font-medium text-blue-700">Transportation Cost</span>
-                            <span id="transportation-cost-display" class="text-2xl font-bold text-blue-600 transition-all duration-300 ease-in-out">$0.00</span>
-                        </div>
-                    </div>
-                    <!-- Other summary details -->
-                    <div class="flex flex-col">
-                        <span class="text-lg font-medium text-blue-700">Total OT Pay</span>
-                        <span id="ot-pay-display" class="text-2xl font-bold text-blue-600 transition-all duration-300 ease-in-out">$0.00</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-lg font-medium text-green-700">Attendance Bonus</span>
-                        <span id="attendance-bonus-display" class="text-2xl font-bold text-green-600 transition-all duration-300 ease-in-out">+$0.00</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-lg font-medium text-green-700">Gildan Bonus</span>
-                        <span id="gildan-bonus-display" class="text-2xl font-bold text-green-600 transition-all duration-300 ease-in-out">+$0.00</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-lg font-medium text-green-700">Increment Pay</span>
-                        <span id="increment-pay-display" class="text-2xl font-bold text-green-600 transition-all duration-300 ease-in-out">+$0.00</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-lg font-medium text-red-700">Provident Fund Deduction</span>
-                        <span id="provident-fund-display" class="text-2xl font-bold text-red-600 transition-all duration-300 ease-in-out">-$0.00</span>
-                    </div>
-                    <div class="flex flex-col pt-2 border-t border-blue-200 col-span-2">
-                        <span class="text-lg font-medium text-blue-700">Net Income (Before Expenses)</span>
-                        <span id="total-income-display" class="text-3xl font-bold text-blue-600 transition-all duration-300 ease-in-out">$0.00</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-lg font-medium text-red-700">Total Expenses</span>
-                        <span id="total-expenses-display" class="text-2xl font-bold text-red-600 transition-all duration-300 ease-in-out">-$0.00</span>
-                    </div>
-                    <div class="flex flex-col pt-2 border-t border-blue-200 col-span-2">
-                        <span class="text-lg font-medium text-blue-700">Final Balance</span>
-                        <span id="final-balance-display" class="text-3xl font-bold text-blue-600 transition-all duration-300 ease-in-out">$0.00</span>
-                    </div>
-                </div>
+
+            <div id="expense-list" class="expense-list" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <!-- RIGHT: Detailed Breakdown (restored style) -->
+        <aside>
+          <div class="summary-wrap">
+            <div class="summary-card" aria-labelledby="detailed-title">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div id="detailed-title" style="font-weight:700;">Detailed Breakdown</div>
+                <div style="color:var(--muted); font-size:13px;">Overview</div>
+              </div>
+
+              <div class="summary-row"><div class="summary-label">Basic Salary</div><div id="basic-salary-display" class="summary-value">$0.00</div></div>
+              <div class="summary-row"><div class="summary-label">House Rent</div><div id="house-rent-display" class="summary-value">$0.00</div></div>
+              <div class="summary-row"><div class="summary-label">Medical</div><div id="medical-display" class="summary-value">$0.00</div></div>
+              <div class="summary-row"><div class="summary-label">Food</div><div id="food-display" class="summary-value">$0.00</div></div>
+              <div class="summary-row"><div class="summary-label">Transportation</div><div id="transportation-cost-display" class="summary-value">$0.00</div></div>
             </div>
-            <p class="text-center text-xs text-gray-400 mt-4">This is a gross estimate based on your inputs. Actual take-home pay may vary due to taxes and other deductions.</p>
-        </div>
-    </div>
 
-    <script>
-        // UI elements
-        const grossSalaryInput = document.getElementById('gross-salary');
-        const otRateInput = document.getElementById('ot-rate');
-        const percentIncrementInput = document.getElementById('percent-increment');
-        const monthSelect = document.getElementById('month-select');
-        const yearSelect = document.getElementById('year-select');
-        const workingDaysInput = document.getElementById('working-days');
-        const addExpenseBtn = document.getElementById('add-expense-btn');
-        const expenseNameInput = document.getElementById('expense-name');
-        const expenseAmountInput = document.getElementById('expense-amount');
-        const expenseListContainer = document.getElementById('expense-list-container');
-        const providentFundCheckbox = document.getElementById('provident-fund');
-        const attendanceBonusCheckbox = document.getElementById('attendance-bonus');
-        const gildanBonusCheckbox = document.getElementById('gildan-bonus');
-        const showGrossBreakdownCheckbox = document.getElementById('show-gross-breakdown');
-        const grossBreakdownContainer = document.getElementById('gross-breakdown-container');
-        const appContent = document.getElementById('app-content');
+            <div class="summary-card">
+              <div class="summary-row"><div class="summary-label">Total OT Pay</div><div id="ot-pay-display" class="summary-value">$0.00</div></div>
+              <div class="summary-row"><div class="summary-label">Attendance Bonus</div><div id="attendance-bonus-display" class="summary-value">+$0.00</div></div>
+              <div class="summary-row"><div class="summary-label">Gildan Bonus</div><div id="gildan-bonus-display" class="summary-value">+$0.00</div></div>
+              <div class="summary-row"><div class="summary-label">Increment Pay</div><div id="increment-pay-display" class="summary-value">+$0.00</div></div>
+              <div class="summary-row"><div class="summary-label">Provident Fund Deduction</div><div id="provident-fund-display" class="summary-value">-$0.00</div></div>
 
-        const basicSalaryDisplay = document.getElementById('basic-salary-display');
-        const houseRentDisplay = document.getElementById('house-rent-display');
-        const medicalDisplay = document.getElementById('medical-display');
-        const foodDisplay = document.getElementById('food-display');
-        const transportationCostDisplay = document.getElementById('transportation-cost-display');
+              <div style="height:8px"></div>
 
-        const otPayDisplay = document.getElementById('ot-pay-display');
-        const incrementPayDisplay = document.getElementById('increment-pay-display');
-        const providentFundDisplay = document.getElementById('provident-fund-display');
-        const attendanceBonusDisplay = document.getElementById('attendance-bonus-display');
-        const gildanBonusDisplay = document.getElementById('gildan-bonus-display');
-        const totalExpensesDisplay = document.getElementById('total-expenses-display');
-        const totalIncomeDisplay = document.getElementById('total-income-display');
-        const finalBalanceDisplay = document.getElementById('final-balance-display');
-        
-        // Local state for expenses
-        let expenses = [];
-        let editingIndex = -1;
+              <div class="summary-row" style="border-top:1px dashed rgba(8,16,40,0.03); padding-top:12px;">
+                <div style="font-weight:700; color:var(--muted);">Net Income (Before Expenses)</div>
+                <div id="total-income-display" class="summary-highlight">$0.00</div>
+              </div>
 
-        // UI and Calculation Logic
-        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const currentYear = new Date().getFullYear();
+              <div style="height:8px"></div>
+              <div class="summary-row"><div class="summary-label">Total Expenses</div><div id="total-expenses-display" class="summary-expense">-$0.00</div></div>
 
-        months.forEach((month, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = month;
-            monthSelect.appendChild(option);
+              <div style="height:10px"></div>
+              <div class="summary-row" style="border-top:1px solid rgba(8,16,40,0.04); padding-top:12px;">
+                <div style="font-weight:800; color:var(--muted);">Final Balance</div>
+                <div id="final-balance-display" class="summary-final">$0.00</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- ---------- Logic JS ---------- -->
+  <script>
+    // constants
+    const OT_COEF_A = 0.006409;
+    const OT_COEF_B = -15.69;
+    const DAILY_OT_HOURS = 2;
+    const PROVIDENT_FUND_RATE = 0.07;
+    const ATTENDANCE_BONUS_VALUE = 525;
+    const GILDAN_BONUS_VALUE = 400;
+    const STORAGE_KEY = 'gildan_final_v1';
+
+    // DOM refs
+    const grossSalaryInput = document.getElementById('gross-salary');
+    const otRateInput = document.getElementById('ot-rate');
+    const autoOtCheckbox = document.getElementById('auto-ot');
+    const percentIncrementInput = document.getElementById('percent-increment');
+    const monthSelect = document.getElementById('month-select');
+    const yearSelect = document.getElementById('year-select');
+    const workingDaysInput = document.getElementById('working-days');
+
+    const attendanceBonusCheckbox = document.getElementById('attendance-bonus');
+    const gildanBonusCheckbox = document.getElementById('gildan-bonus');
+    const providentFundCheckbox = document.getElementById('provident-fund');
+    const showGrossBreakdownCheckbox = document.getElementById('show-gross-breakdown');
+
+    const expenseName = document.getElementById('expense-name');
+    const expenseAmount = document.getElementById('expense-amount');
+    const addExpenseBtn = document.getElementById('add-expense-btn');
+    const expenseList = document.getElementById('expense-list');
+
+    const basicSalaryDisplay = document.getElementById('basic-salary-display');
+    const houseRentDisplay = document.getElementById('house-rent-display');
+    const medicalDisplay = document.getElementById('medical-display');
+    const foodDisplay = document.getElementById('food-display');
+    const transportationCostDisplay = document.getElementById('transportation-cost-display');
+
+    const otPayDisplay = document.getElementById('ot-pay-display');
+    const attendanceBonusDisplay = document.getElementById('attendance-bonus-display');
+    const gildanBonusDisplay = document.getElementById('gildan-bonus-display');
+    const incrementPayDisplay = document.getElementById('increment-pay-display');
+    const providentFundDisplay = document.getElementById('provident-fund-display');
+    const totalIncomeDisplay = document.getElementById('total-income-display');
+    const totalExpensesDisplay = document.getElementById('total-expenses-display');
+    const finalBalanceDisplay = document.getElementById('final-balance-display');
+
+    let expenses = [];
+    let editingIndex = -1;
+    let programmaticOtChange = false;
+
+    function fmt(v){ return '$' + (Number(v) || 0).toFixed(2); }
+    function fmtPlain(v){ return (Number(v) || 0).toFixed(2); }
+    function escapeHtml(s=''){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // months/years populate
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    months.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; monthSelect.appendChild(o); });
+    monthSelect.value = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    for(let y=currentYear-5; y<=currentYear+5; y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; yearSelect.appendChild(o); }
+    yearSelect.value = currentYear;
+
+    // persistence
+    function saveState(){
+      try{
+        const state = {
+          inputs:{
+            gross: grossSalaryInput.value,
+            ot: otRateInput.value,
+            autoOt: autoOtCheckbox.checked,
+            percentIncrement: percentIncrementInput.value,
+            month: monthSelect.value,
+            year: yearSelect.value,
+            workingDays: workingDaysInput.value,
+            attendanceBonus: attendanceBonusCheckbox.checked,
+            gildanBonus: gildanBonusCheckbox.checked,
+            providentFund: providentFundCheckbox.checked,
+            showGrossBreakdown: showGrossBreakdownCheckbox.checked
+          },
+          expenses
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }catch(e){ console.warn('save failed', e); }
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return;
+        const state = JSON.parse(raw);
+        if(state.inputs){
+          grossSalaryInput.value = state.inputs.gross || '';
+          otRateInput.value = state.inputs.ot || '';
+          autoOtCheckbox.checked = !!state.inputs.autoOt;
+          percentIncrementInput.value = state.inputs.percentIncrement || '';
+          monthSelect.value = state.inputs.month ?? monthSelect.value;
+          yearSelect.value = state.inputs.year ?? yearSelect.value;
+          workingDaysInput.value = state.inputs.workingDays || '';
+          attendanceBonusCheckbox.checked = !!state.inputs.attendanceBonus;
+          gildanBonusCheckbox.checked = !!state.inputs.gildanBonus;
+          providentFundCheckbox.checked = !!state.inputs.providentFund;
+          showGrossBreakdownCheckbox.checked = !!state.inputs.showGrossBreakdown;
+        }
+        if(Array.isArray(state.expenses)) expenses = state.expenses;
+      }catch(e){ console.warn('load failed', e); }
+    }
+
+    // render expenses
+    function renderExpenses(){
+      expenseList.innerHTML = '';
+      if(!expenses.length){
+        expenseList.innerHTML = '<div class="text-sm">No expenses added yet.</div>';
+        return;
+      }
+      expenses.forEach((ex, idx) => {
+        const el = document.createElement('div');
+        el.className = 'expense-item';
+        el.innerHTML = `
+          <div class="expense-left">
+            <div style="width:8px;height:8px;border-radius:2px;background:#eef2ff;margin-right:8px;"></div>
+            <div class="expense-name" title="${escapeHtml(ex.name)}">${escapeHtml(ex.name)}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="expense-amount">-$${fmtPlain(ex.amount)}</div>
+            <button class="small-icon" data-edit="${idx}" title="Edit">✏️</button>
+            <button class="small-icon" data-del="${idx}" title="Delete">🗑️</button>
+          </div>
+        `;
+        expenseList.appendChild(el);
+      });
+
+      expenseList.querySelectorAll('[data-edit]').forEach(btn=>{
+        btn.addEventListener('click', ()=> {
+          const idx = Number(btn.getAttribute('data-edit'));
+          editingIndex = idx;
+          expenseName.value = expenses[idx].name;
+          expenseAmount.value = expenses[idx].amount;
+          addExpenseBtn.textContent = 'Update';
         });
-        monthSelect.value = new Date().getMonth();
-
-        for (let i = currentYear - 5; i <= currentYear + 5; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = i;
-            yearSelect.appendChild(option);
-        }
-        yearSelect.value = currentYear;
-
-        // Function to render the list of expenses in the UI
-        function renderExpenses() {
-            expenseListContainer.innerHTML = '';
-            expenses.forEach((expense, index) => {
-                const item = document.createElement('div');
-                item.className = 'expense-item';
-                item.innerHTML = `
-                    <span>${expense.name}</span>
-                    <div class="flex items-center space-x-2">
-                        <span>-$${expense.amount.toFixed(2)}</span>
-                        <button class="edit-expense-btn bg-blue-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center hover:bg-blue-600 transition-all duration-300 ease-in-out" data-index="${index}">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-3.102 5.093l-2.828 2.828.793.793L10.3 8.328l-2.828-2.828-.793-.793zM10 18a8 8 0 100-16 8 8 0 000 16zM5 10a1 1 0 100 2h.01a1 1 0 100-2H5z" clip-rule="evenodd" fill-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <button class="remove-expense-btn bg-red-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-all duration-300 ease-in-out" data-index="${index}">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 011 1v6a1 1 0 11-2 0V8a1 1 0 011-1z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
-                `;
-                expenseListContainer.appendChild(item);
-            });
-            // Add event listeners to the new buttons
-            document.querySelectorAll('.edit-expense-btn').forEach(button => {
-                button.addEventListener('click', handleEditExpense);
-            });
-            document.querySelectorAll('.remove-expense-btn').forEach(button => {
-                button.addEventListener('click', (e) => deleteExpense(e.currentTarget.dataset.index));
-            });
-        }
-
-        // Function to handle editing an expense
-        function handleEditExpense(event) {
-            const indexToEdit = parseInt(event.currentTarget.dataset.index);
-            const expenseToEdit = expenses[indexToEdit];
-            if (expenseToEdit) {
-                expenseNameInput.value = expenseToEdit.name;
-                expenseAmountInput.value = expenseToEdit.amount;
-                editingIndex = indexToEdit;
-                addExpenseBtn.textContent = 'Update Expense';
-                addExpenseBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                addExpenseBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
-            }
-        }
-        
-        // Function to handle adding or updating an expense
-        function addOrUpdateExpense(name, amount) {
-            if (editingIndex > -1) {
-                expenses[editingIndex] = { name, amount };
-                editingIndex = -1;
-                addExpenseBtn.textContent = 'Add Expense';
-                addExpenseBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-                addExpenseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            } else {
-                expenses.push({ name, amount });
-            }
-            renderExpenses();
-            calculateMonthlyIncome();
-        }
-
-        // Function to handle deleting an expense
-        function deleteExpense(index) {
-            expenses.splice(index, 1);
-            renderExpenses();
-            calculateMonthlyIncome();
-        }
-
-        function calculateMonthlyIncome() {
-            const grossSalary = parseFloat(grossSalaryInput.value) || 0;
-            const otRate = parseFloat(otRateInput.value) || 0;
-            const percentIncrement = parseFloat(percentIncrementInput.value) || 0;
-            const dailyOTHours = 2;
-            const providentFundRate = 0.07;
-            const attendanceBonus = 525;
-            const gildanBonus = 400;
-
-            let totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-            
-            let workingDays;
-            if (workingDaysInput.value && !isNaN(workingDaysInput.value)) {
-                workingDays = parseFloat(workingDaysInput.value);
-            } else {
-                const selectedMonth = parseInt(monthSelect.value);
-                const selectedYear = parseInt(yearSelect.value);
-                workingDays = 0;
-                const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-                for (let i = 1; i <= daysInMonth; i++) {
-                    const day = new Date(selectedYear, selectedMonth, i).getDay();
-                    if (day >= 1 && day <= 5) {
-                        workingDays++;
-                    }
-                }
-            }
-
-            const basicSalary = grossSalary * (9993 / 17440);
-            const houseRent = grossSalary * (4997 / 17440);
-            const medical = grossSalary * (750 / 17440);
-            const food = grossSalary * (1250 / 17440);
-            const transportationCost = grossSalary * (450 / 17440);
-
-            const totalOTPay = workingDays * dailyOTHours * otRate;
-            let totalMonthlyIncome = grossSalary + totalOTPay;
-            let providentFundDeduction = 0;
-            let totalAttendanceBonus = 0;
-            let totalGildanBonus = 0;
-            let totalIncrementPay = 0;
-
-            if (providentFundCheckbox.checked) {
-                providentFundDeduction = basicSalary * providentFundRate;
-                totalMonthlyIncome -= providentFundDeduction;
-            }
-
-            if (attendanceBonusCheckbox.checked) {
-                totalAttendanceBonus = attendanceBonus;
-                totalMonthlyIncome += totalAttendanceBonus;
-            }
-
-            if (gildanBonusCheckbox.checked) {
-                totalGildanBonus = gildanBonus;
-                totalMonthlyIncome += totalGildanBonus;
-            }
-
-            if (percentIncrement > 0) {
-                totalIncrementPay = grossSalary * (percentIncrement / 100);
-                totalMonthlyIncome += totalIncrementPay;
-            }
-            
-            let finalBalance = totalMonthlyIncome - totalExpenses;
-
-            // Update display elements
-            basicSalaryDisplay.textContent = `$${basicSalary.toFixed(2)}`;
-            houseRentDisplay.textContent = `$${houseRent.toFixed(2)}`;
-            medicalDisplay.textContent = `$${medical.toFixed(2)}`;
-            foodDisplay.textContent = `$${food.toFixed(2)}`;
-            transportationCostDisplay.textContent = `$${transportationCost.toFixed(2)}`;
-            otPayDisplay.textContent = `$${totalOTPay.toFixed(2)}`;
-            providentFundDisplay.textContent = `-$${providentFundDeduction.toFixed(2)}`;
-            attendanceBonusDisplay.textContent = `+$${totalAttendanceBonus.toFixed(2)}`;
-            gildanBonusDisplay.textContent = `+$${totalGildanBonus.toFixed(2)}`;
-            incrementPayDisplay.textContent = `+$${totalIncrementPay.toFixed(2)}`;
-            totalExpensesDisplay.textContent = `-$${totalExpenses.toFixed(2)}`;
-            totalIncomeDisplay.textContent = `$${totalMonthlyIncome.toFixed(2)}`;
-            finalBalanceDisplay.textContent = `$${finalBalance.toFixed(2)}`;
-        }
-
-        // Event listeners
-        addExpenseBtn.addEventListener('click', () => {
-            const name = expenseNameInput.value.trim();
-            const amount = parseFloat(expenseAmountInput.value);
-            if (name && !isNaN(amount) && amount > 0) {
-                addOrUpdateExpense(name, amount);
-                expenseNameInput.value = '';
-                expenseAmountInput.value = '';
-            }
+      });
+      expenseList.querySelectorAll('[data-del]').forEach(btn=>{
+        btn.addEventListener('click', ()=> {
+          const idx = Number(btn.getAttribute('data-del'));
+          if(!confirm('Delete this expense?')) return;
+          expenses.splice(idx,1);
+          renderExpenses();
+          calculateAll();
+          saveState();
         });
+      });
+    }
 
-        showGrossBreakdownCheckbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                grossBreakdownContainer.classList.remove('hidden');
-            } else {
-                grossBreakdownContainer.classList.add('hidden');
-            }
-        });
+    // OT compute and working days
+    function computeOtRateFromGross(gross){
+      const g = Number(gross) || 0;
+      const raw = (OT_COEF_A * g) + OT_COEF_B;
+      if(!g) return ''; // blank if gross empty
+      return Math.max(0, raw);
+    }
 
-        // Event listeners for all inputs and checkboxes
-        const inputs = [grossSalaryInput, otRateInput, percentIncrementInput, workingDaysInput, providentFundCheckbox, attendanceBonusCheckbox, gildanBonusCheckbox];
-        inputs.forEach(input => input.addEventListener('input', calculateMonthlyIncome));
-        monthSelect.addEventListener('change', calculateMonthlyIncome);
-        yearSelect.addEventListener('change', calculateMonthlyIncome);
+    function calcWorkingDaysForMonth(year, month){
+      year = Number(year); month = Number(month);
+      if(isNaN(year) || isNaN(month)) return 0;
+      const dCount = new Date(year, month+1, 0).getDate();
+      let count = 0;
+      for(let d=1; d<=dCount; d++){
+        const day = new Date(year, month, d).getDay();
+        if(day !== 5) count++; // Friday off
+      }
+      return count;
+    }
 
-        // Initial calculation on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            renderExpenses();
-            calculateMonthlyIncome();
-        });
-    </script>
+    // main calc
+    function calculateAll(){
+      const gross = Number(grossSalaryInput.value) || 0;
+      const otRate = Number(otRateInput.value) || 0;
+      const percentInc = Number(percentIncrementInput.value) || 0;
+
+      let workingDays = Number(workingDaysInput.value) || 0;
+      if(!workingDays) workingDays = calcWorkingDaysForMonth(Number(yearSelect.value), Number(monthSelect.value));
+
+      const basic = gross * (9993 / 17440);
+      const house = gross * (4997 / 17440);
+      const medical = gross * (750 / 17440);
+      const food = gross * (1250 / 17440);
+      const transport = gross * (450 / 17440);
+
+      const totalOTPay = workingDays * DAILY_OT_HOURS * otRate;
+      let total = gross + totalOTPay;
+
+      let pfDeduction = 0;
+      if(providentFundCheckbox.checked){
+        pfDeduction = basic * PROVIDENT_FUND_RATE;
+        total -= pfDeduction;
+      }
+
+      const attendanceBonus = attendanceBonusCheckbox.checked ? ATTENDANCE_BONUS_VALUE : 0;
+      const gildanBonus = gildanBonusCheckbox.checked ? GILDAN_BONUS_VALUE : 0;
+      total += attendanceBonus + gildanBonus;
+
+      const incrementPay = percentInc > 0 ? (gross * (percentInc / 100)) : 0;
+      total += incrementPay;
+
+      const totalExpenses = expenses.reduce((s,e)=> s + (Number(e.amount) || 0), 0);
+      const finalBalance = total - totalExpenses;
+
+      // update UI
+      basicSalaryDisplay.textContent = fmt(basic);
+      houseRentDisplay.textContent = fmt(house);
+      medicalDisplay.textContent = fmt(medical);
+      foodDisplay.textContent = fmt(food);
+      transportationCostDisplay.textContent = fmt(transport);
+
+      otPayDisplay.textContent = fmt(totalOTPay);
+      attendanceBonusDisplay.textContent = (attendanceBonus ? '+' + fmtPlain(attendanceBonus) : '+' + fmtPlain(0));
+      gildanBonusDisplay.textContent = (gildanBonus ? '+' + fmtPlain(gildanBonus) : '+' + fmtPlain(0));
+      incrementPayDisplay.textContent = '+' + fmtPlain(incrementPay);
+      providentFundDisplay.textContent = '-' + fmtPlain(pfDeduction);
+
+      totalIncomeDisplay.textContent = fmt(total);
+      totalExpensesDisplay.textContent = '-' + fmtPlain(totalExpenses);
+      finalBalanceDisplay.textContent = fmt(finalBalance);
+
+      // color-coded highlights applied via CSS classes (already set)
+      saveState();
+    }
+
+    // wire events
+    function wire(){
+      grossSalaryInput.addEventListener('input', ()=>{
+        if(autoOtCheckbox.checked){
+          programmaticOtChange = true;
+          const ot = computeOtRateFromGross(Number(grossSalaryInput.value) || 0);
+          otRateInput.value = ot === '' ? '' : ot.toFixed(2);
+          setTimeout(()=> programmaticOtChange = false, 10);
+        }
+        calculateAll();
+      });
+
+      otRateInput.addEventListener('input', ()=>{
+        if(!programmaticOtChange && autoOtCheckbox.checked){
+          // user manually changed OT => disable auto
+          autoOtCheckbox.checked = false;
+        }
+        calculateAll();
+      });
+
+      percentIncrementInput.addEventListener('input', calculateAll);
+      workingDaysInput.addEventListener('input', calculateAll);
+      monthSelect.addEventListener('change', calculateAll);
+      yearSelect.addEventListener('change', calculateAll);
+
+      attendanceBonusCheckbox.addEventListener('change', calculateAll);
+      gildanBonusCheckbox.addEventListener('change', calculateAll);
+      providentFundCheckbox.addEventListener('change', calculateAll);
+      showGrossBreakdownCheckbox.addEventListener('change', calculateAll);
+
+      // add / update expense
+      addExpenseBtn.addEventListener('click', ()=>{
+        const name = (expenseName.value || '').trim();
+        const amount = Number(expenseAmount.value) || 0;
+        if(!name){ alert('Please enter expense name'); return; }
+        if(!(amount > 0)){ alert('Please enter a positive amount'); return; }
+
+        if(editingIndex > -1){
+          expenses[editingIndex] = { name, amount };
+          editingIndex = -1;
+          addExpenseBtn.textContent = 'Add';
+        } else {
+          expenses.push({ name, amount });
+        }
+        expenseName.value = '';
+        expenseAmount.value = '';
+        renderExpenses();
+        calculateAll();
+      });
+    }
+
+    // init
+    function init(){
+      loadState();
+      renderExpenses();
+      wire();
+
+      if(autoOtCheckbox.checked){
+        const ot = computeOtRateFromGross(Number(grossSalaryInput.value) || 0);
+        programmaticOtChange = true;
+        otRateInput.value = ot === '' ? '' : ot.toFixed(2);
+        setTimeout(()=> programmaticOtChange = false, 10);
+      }
+
+      calculateAll();
+    }
+
+    init();
+  </script>
 </body>
 </html>
