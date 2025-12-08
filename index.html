@@ -92,9 +92,23 @@
     .summary-label { color:#0b1220; font-weight:500; }
     .summary-value { color:#0b1220; font-weight:700; }
 
-    .summary-highlight { font-weight:800; font-size:16px; color:var(--accent); }   /* Net Income blue */
-    .summary-final { font-weight:900; font-size:18px; color:var(--danger); }      /* Final Balance red */
-    .summary-expense { font-weight:700; font-size:14px; color:var(--success); }   /* Total Expenses green */
+    .summary-highlight { 
+  font-weight:800; 
+  font-size:16px; 
+  color:var(--accent);        /* Net Income blue (unchanged) */
+}
+
+.summary-final { 
+  font-weight:900; 
+  font-size:18px; 
+  color:var(--success);       /* Final Balance → GREEN */
+}
+
+.summary-expense { 
+  font-weight:700; 
+  font-size:14px; 
+  color:var(--danger);        /* Total Expenses → RED */
+}
 
     @media (max-width:720px){
       .grid-2{ grid-template-columns: 1fr; }
