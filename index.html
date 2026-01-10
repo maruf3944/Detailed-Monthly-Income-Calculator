@@ -2,297 +2,844 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Gildan Monthly Income Calculator</title>
 
-  <!-- Inter font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Tailwind (optional utilities) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
-    /* ---------- High-res / crisp rendering ---------- */
-    html,body { -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
-    body { margin:0; font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,#f7fbff 0%, #eef6ff 100%); color:#071220; -webkit-text-size-adjust:100%; -webkit-transform: translateZ(0); }
-
-    :root {
-      --muted: #64748b;
+    :root{
+      --bg: #0f172a;
       --accent: #2563eb;
-      --success: #059669; /* green */
-      --danger: #dc2626;  /* red */
+      --accent-soft: #eff6ff;
+      --accent-strong: #1d4ed8;
+      --success: #16a34a;
+      --warning: #f97316;
+      --danger: #dc2626;
+      --muted: #64748b;
       --card-radius: 16px;
-      --shadow-sm: 0 6px 18px rgba(3,10,22,0.06);
-      --shadow-lg: 0 12px 40px rgba(3,10,22,0.08);
+      --shadow-sm: 0 6px 18px rgba(15,23,42,0.10);
+      --shadow-lg: 0 18px 45px rgba(15,23,42,0.18);
     }
 
-    /* container */
-    .page-wrap { display:flex; justify-content:center; align-items:flex-start; padding:40px 20px; gap:20px; }
-    .card-main { width:100%; max-width:980px; border-radius:20px; background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,251,0.96)); border:1px solid rgba(8,16,40,0.04); box-shadow:var(--shadow-sm); padding:28px; backdrop-filter: blur(6px) saturate(120%); transition: transform .2s ease, box-shadow .2s ease; }
-    .card-main:hover{ box-shadow:var(--shadow-lg); transform: translateY(-2px); }
+    *{ box-sizing:border-box; }
 
-    /* header */
-    .top-brand { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; margin-bottom:10px; }
-    .brand-logo { height:70px; width:auto; }
-    .title { font-size:28px; font-weight:700; line-height:1.02; color:#07122a; letter-spacing:-0.3px; text-align:center; }
-    .subtitle { color:var(--muted); font-size:14px; text-align:center; margin-top:6px; }
-
-    /* layout */
-    .grid-2 { display:grid; grid-template-columns: 1fr 360px; gap:22px; align-items:start; margin-top:18px; }
-    @media (max-width:980px){ .grid-2{ grid-template-columns:1fr; } }
-
-    .panel { background: rgba(255,255,255,0.98); border-radius:14px; padding:18px; border:1px solid rgba(8,16,40,0.04); box-shadow:0 4px 18px rgba(8,16,40,0.03); }
-    .panel h3{ font-size:16px; font-weight:600; color:#07122a; margin-bottom:10px; }
-
-    .field { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
-    label.field-label { font-size:13px; font-weight:600; color:#334155; }
-
-    input.uniform, select.uniform {
-      width:100%; padding:12px 14px; border-radius:10px; border:1px solid rgba(10,20,40,0.06); font-size:15px;
-      background:white; outline:none; transition: box-shadow .12s ease, border-color .12s ease, transform .08s ease;
+    html,body{
+      margin:0;
+      padding:0;
+      font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background: radial-gradient(circle at top, #0f172a 0, #020617 48%, #020617 100%);
+      color:#0f172a;
     }
-    input.uniform::placeholder, select.uniform::placeholder { color:#94a3b8; }
-    input.uniform:focus, select.uniform:focus { border-color: rgba(37,99,235,0.9); box-shadow: 0 8px 26px rgba(37,99,235,0.06); transform: translateY(-1px); }
 
-    .with-prefix { position:relative; }
-    .with-prefix .prefix { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:15px; pointer-events:none; }
-    .with-prefix input.uniform{ padding-left:44px; }
+    .page-wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:24px 10px 36px;
+    }
 
-    .checks { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .card-main{
+      width:100%;
+      max-width:1040px;
+      background:rgba(248,250,252,0.98);
+      border-radius:22px;
+      box-shadow:var(--shadow-lg);
+      padding:18px 14px 18px;
+      backdrop-filter: blur(16px);
+    }
 
-    /* ---------- Glass pill (Add Expense) ---------- */
-    .pill-bar { margin-top:14px; display:flex; align-items:center; width:100%; border-radius:999px; padding:8px; background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4)); box-shadow: 0 8px 20px rgba(3,10,40,0.06); border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(10px) saturate(120%); gap:8px; }
-    .pill-section { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:999px; min-height:48px; }
-    .pill-left { flex:1; min-width:120px; background: rgba(255,255,255,0.20); }
-    .pill-middle { width:140px; justify-content:center; background: rgba(255,255,255,0.12); }
-    .pill-right { width:110px; justify-content:center; background:transparent; }
+    @media (min-width:768px){
+      .card-main{ padding:22px 22px 20px; }
+    }
 
-    .pill-input { border:none; outline:none; background:transparent; font-size:15px; width:100%; color:#07122a; }
-    .pill-input::placeholder{ color:#94a3b8; }
+    .top-brand{
+      text-align:center;
+      margin-bottom:16px;
+    }
 
-    .pill-divider { width:1px; height:28px; background: rgba(8,16,40,0.04); border-radius:2px; margin:0 6px; }
+    .brand-logo{
+      height:60px;
+      width:auto;
+      object-fit:contain;
+      margin-bottom:6px;
+    }
 
-    .pill-add { display:inline-flex; align-items:center; justify-content:center; gap:8px; background: linear-gradient(180deg,#2563eb,#1e40af); color:white; padding:10px 18px; border-radius:999px; font-weight:700; cursor:pointer; border:none; min-height:44px; box-shadow:0 10px 26px rgba(37,99,235,0.12); transition: transform .12s ease, box-shadow .12s ease; }
-    .pill-add:hover{ transform: translateY(-3px); box-shadow: 0 14px 36px rgba(37,99,235,0.16); }
+    .title{
+      font-size:1.5rem;
+      font-weight:800;
+      letter-spacing:-0.03em;
+      color:#020617;
+      margin-bottom:4px;
+    }
 
-    /* expense list */
-    .expense-list { margin-top:14px; display:flex; flex-direction:column; gap:10px; }
-    .expense-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg,#ffffff,#fbfdff); border:1px solid rgba(8,16,40,0.04); }
-    .expense-left{ display:flex; gap:12px; align-items:center; }
-    .expense-name{ font-weight:600; color:#07122a; font-size:14px; max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .expense-amount{ font-weight:700; color:var(--danger); }
-    .small-icon{ width:40px; height:40px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(8,16,40,0.06); background:linear-gradient(180deg,#fff,#fbfdff); cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; }
-    .small-icon:hover{ transform:translateY(-3px); box-shadow:0 10px 30px rgba(3,10,40,0.06); }
+    @media (min-width:768px){
+      .title{ font-size:1.8rem; }
+    }
 
-    /* ---------- Detailed Breakdown (restored style) ---------- */
-    .summary-wrap { display:flex; flex-direction:column; gap:12px; }
-    .summary-card { background:white; border-radius:12px; padding:12px; border:1px solid rgba(8,16,40,0.04); box-shadow: 0 4px 18px rgba(8,16,40,0.02); }
-    .summary-row { display:flex; justify-content:space-between; align-items:center; padding:10px 6px; border-bottom:1px solid rgba(8,16,40,0.03); }
-    .summary-row:last-child { border-bottom:0; }
-    .summary-label { color:#0b1220; font-weight:500; }
-    .summary-value { color:#0b1220; font-weight:700; }
+    .subtitle{
+      font-size:0.9rem;
+      color:var(--muted);
+    }
 
-    .summary-highlight { 
-  font-weight:800; 
-  font-size:16px; 
-  color:var(--accent);        /* Net Income blue (unchanged) */
-}
+    .layout-2col{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
 
-.summary-final { 
-  font-weight:900; 
-  font-size:18px; 
-  color:var(--success);       /* Final Balance → GREEN */
-}
+    @media (min-width:960px){
+      .layout-2col{
+        flex-direction:row;
+        align-items:flex-start;
+      }
+      .col-left{
+        flex:1.25;
+      }
+      .col-right{
+        flex:0.95;
+      }
+    }
 
-.summary-expense { 
-  font-weight:700; 
-  font-size:14px; 
-  color:var(--danger);        /* Total Expenses → RED */
-}
+    .section-card{
+      background:#ffffff;
+      border-radius:var(--card-radius);
+      padding:14px 14px 16px;
+      box-shadow:var(--shadow-sm);
+      border:1px solid rgba(15,23,42,0.04);
+    }
 
-    @media (max-width:720px){
-      .grid-2{ grid-template-columns: 1fr; }
-      .pill-middle{ width:120px; }
-      .pill-right{ width:100px; }
+    @media (min-width:768px){
+      .section-card{ padding:16px 18px 18px; }
+    }
+
+    .section-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+      gap:8px;
+    }
+
+    .section-title{
+      font-size:0.95rem;
+      font-weight:700;
+      color:#0f172a;
+    }
+
+    .badge-soft{
+      font-size:0.72rem;
+      font-weight:600;
+      padding:2px 8px;
+      border-radius:999px;
+      background:#e5edff;
+      color:#1d4ed8;
+      white-space:nowrap;
+    }
+
+    .section-body{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px 14px;
+    }
+
+    @media (min-width:768px){
+      .section-body.two-col{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .field-label{
+      font-size:0.8rem;
+      font-weight:600;
+      color:#0f172a;
+    }
+
+    .field-hint{
+      font-size:0.7rem;
+      color:var(--muted);
+    }
+
+    .input-wrap{
+      position:relative;
+    }
+
+    .prefix{
+      position:absolute;
+      left:10px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:0.85rem;
+      color:var(--muted);
+      pointer-events:none;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select{
+      width:100%;
+      border-radius:10px;
+      border:1px solid rgba(15,23,42,0.08);
+      padding:9px 10px;
+      font-size:0.85rem;
+      background:#ffffff;
+      outline:none;
+      transition:border-color .15s ease, box-shadow .15s ease, transform .08s ease;
+    }
+
+    input[type="number"]{ text-align:right; }
+
+    .input-wrap.with-prefix input[type="number"],
+    .input-wrap.with-prefix input[type="text"]{
+      padding-left:34px;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(37,99,235,0.25);
+      transform:translateY(-1px);
+    }
+
+    input.invalid,
+    select.invalid{
+      border-color:var(--danger);
+      box-shadow:0 0 0 1px rgba(220,38,38,0.25);
+    }
+
+    .error-text{
+      font-size:0.75rem;
+      color:var(--danger);
+      margin-top:1px;
+    }
+
+    .warning-text{
+      font-size:0.75rem;
+      color:var(--warning);
+      margin-top:2px;
+    }
+
+    .inline-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .checkbox-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      font-size:0.8rem;
+      margin-top:4px;
+    }
+
+    .checkbox-row label{
+      display:flex;
+      align-items:center;
+      gap:5px;
+      color:#0f172a;
+    }
+
+    .checkbox-row input[type="checkbox"]{
+      width:14px;
+      height:14px;
+      accent-color:var(--accent);
+    }
+
+    .pill-row{
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) auto;
+      gap:8px;
+      margin-top:8px;
+      align-items:center;
+    }
+
+    @media (max-width:640px){
+      .pill-row{
+        grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+        grid-auto-rows:auto;
+      }
+    }
+
+    .pill-input{
+      border-radius:999px;
+      padding:8px 12px;
+      border:1px solid rgba(15,23,42,0.08);
+      font-size:0.8rem;
+      background:#f8fafc;
+    }
+
+    .pill-input:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(37,99,235,0.25);
+    }
+
+    .btn{
+      border-radius:999px;
+      border:none;
+      padding:8px 16px;
+      font-size:0.8rem;
+      font-weight:600;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      transition:background .15s ease, transform .08s ease, box-shadow .15s ease;
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,#2563eb,#1d4ed8);
+      color:#ffffff;
+      box-shadow:0 10px 22px rgba(37,99,235,0.35);
+    }
+
+    .btn-primary:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 28px rgba(37,99,235,0.45);
+    }
+
+    .btn-ghost{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid rgba(148,163,184,0.7);
+    }
+
+    .btn-ghost:hover{
+      background:#e5e7eb;
+      color:#0f172a;
+    }
+
+    .btn-small{
+      padding:5px 10px;
+      font-size:0.75rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.55);
+      background:#ffffff;
+      color:#0f172a;
+      cursor:pointer;
+    }
+
+    .btn-small:hover{
+      background:#e5edff;
+      border-color:#93c5fd;
+    }
+
+    .quick-row{
+      margin-top:8px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      font-size:0.75rem;
+      align-items:center;
+    }
+
+    .quick-row span{
+      color:var(--muted);
+      margin-right:2px;
+    }
+
+    .expense-list{
+      margin-top:8px;
+      border-radius:12px;
+      border:1px dashed rgba(148,163,184,0.6);
+      padding:8px 8px 6px;
+      background:#f9fafb;
+      max-height:220px;
+      overflow-y:auto;
+    }
+
+    .expense-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+      padding:6px 6px;
+      border-radius:8px;
+      font-size:0.8rem;
+    }
+
+    .expense-item:nth-child(odd){
+      background:rgba(226,232,240,0.9);
+    }
+
+    .expense-main{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .expense-title{
+      font-weight:600;
+      color:#0f172a;
+    }
+
+    .expense-meta{
+      font-size:0.72rem;
+      color:var(--muted);
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      padding:1px 7px;
+      border-radius:999px;
+      font-size:0.65rem;
+      margin-right:4px;
+    }
+
+    .chip-essential{
+      background:rgba(22,163,74,0.12);
+      color:#166534;
+    }
+
+    .chip-nonessential{
+      background:rgba(249,115,22,0.12);
+      color:#c2410c;
+    }
+
+    .expense-actions{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:4px;
+      min-width:70px;
+    }
+
+    .expense-amount{
+      font-weight:700;
+    }
+
+    .expense-actions button{
+      border:none;
+      background:none;
+      cursor:pointer;
+      font-size:0.78rem;
+      padding:0;
+      color:#4b5563;
+    }
+
+    .expense-actions button:hover{
+      color:#111827;
+    }
+
+    .mini-summary{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+      font-size:0.78rem;
+      color:#0f172a;
+    }
+
+    .mini-summary strong{
+      font-weight:700;
+    }
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px 12px;
+      font-size:0.82rem;
+    }
+
+    @media (max-width:640px){
+      .summary-grid{ grid-template-columns:1fr; }
+    }
+
+    .summary-block{
+      padding:8px 10px;
+      border-radius:10px;
+      background:#f9fafb;
+      border:1px solid rgba(148,163,184,0.35);
+    }
+
+    .summary-label{
+      font-size:0.7rem;
+      color:var(--muted);
+      margin-bottom:2px;
+    }
+
+    .summary-value{
+      font-weight:700;
+      font-size:0.9rem;
+      color:#0f172a;
+      word-break:break-word;
+    }
+
+    .summary-final{
+      font-weight:800;
+      font-size:1rem;
+    }
+
+    .balance-green{ color:var(--success) !important; }
+    .balance-orange{ color:var(--warning) !important; }
+    .balance-red{ color:var(--danger) !important; }
+
+    .progress-wrap{
+      margin-top:12px;
+    }
+
+    .progress-labels{
+      display:flex;
+      justify-content:space-between;
+      font-size:0.78rem;
+      color:var(--muted);
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .progress-bar{
+      margin-top:6px;
+      width:100%;
+      height:8px;
+      border-radius:999px;
+      background:#e5e7eb;
+      overflow:hidden;
+    }
+
+    .progress-expenses{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#f97316,#ef4444);
+      transition:width .2s ease;
+    }
+
+    .summary-footer{
+      margin-top:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:8px;
+      font-size:0.78rem;
+      color:#var(--muted);
+    }
+
+    .summary-footer{
+      margin-top:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:8px;
+      font-size:0.78rem;
+      color:var(--muted);
+    }
+
+    .status-pill{
+      font-size:0.72rem;
+      padding:3px 8px;
+      border-radius:999px;
+      background:#e5e7eb;
+      color:#111827;
+      font-weight:600;
+    }
+
+    .status-pill.deficit{
+      background:rgba(220,38,38,0.12);
+      color:#b91c1c;
+    }
+
+    .status-pill.safe{
+      background:rgba(22,163,74,0.12);
+      color:#166534;
+    }
+
+    .status-pill.low{
+      background:rgba(249,115,22,0.12);
+      color:#c2410c;
+    }
+
+    .actions-row{
+      margin-top:12px;
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      flex-wrap:wrap;
     }
   </style>
 </head>
 <body>
   <div class="page-wrap">
-    <main class="card-main" role="main" aria-labelledby="app-title">
+    <main class="card-main">
       <div class="top-brand">
         <img src="GILDAN-Logo.png" alt="Gildan Logo" class="brand-logo" />
-        <div id="app-title" class="title">Gildan Monthly Income Calculator</div>
-        <div class="subtitle">Calculate your estimated monthly income and deduct your expenses to see your final balance.</div>
+        <div class="title">Gildan Monthly Income Calculator</div>
+        <div class="subtitle">All amounts in <strong>৳</strong>. Enter your salary, add expenses, and see your final balance.</div>
       </div>
 
-      <div class="grid-2">
-        <!-- LEFT: form & pill -->
-        <section>
-          <div class="panel">
-            <h3>Salary Informations</h3>
+      <div class="layout-2col" id="calculator-root">
+        <div class="col-left">
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">Salary & Work Info</div>
+              <span class="badge-soft">Required</span>
+            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="section-body two-col">
               <div class="field">
-                <label class="field-label">Total Monthly Salary ($)</label>
-                <div class="with-prefix">
-                  <span class="prefix">$</span>
-                  <input id="gross-salary" class="uniform" type="number" step="0.01" placeholder="" inputmode="decimal" />
+                <label class="field-label" for="gross-salary">Gross Monthly Salary (৳)</label>
+                <div class="input-wrap with-prefix">
+                  <span class="prefix">৳</span>
+                  <input id="gross-salary" type="number" step="0.01" inputmode="decimal" placeholder="0.00" />
+                </div>
+                <p class="error-text" id="gross-error"></p>
+              </div>
+
+              <!-- swapped: OT Rate comes before Increment now -->
+              <div class="field">
+                <label class="field-label" for="ot-rate">OT Rate per Hour (৳)</label>
+                <div class="inline-row">
+                  <div class="input-wrap with-prefix" style="flex:1;">
+                    <span class="prefix">৳</span>
+                    <input id="ot-rate" type="number" step="0.01" inputmode="decimal" placeholder="Auto from salary" />
+                  </div>
+                  <button type="button" id="auto-ot-btn" class="btn-small">Auto</button>
+                </div>
+                <p class="field-hint">Auto-calculated from gross salary by default.</p>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="month-select">Month</label>
+                <select id="month-select"></select>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="year-select">Year</label>
+                <select id="year-select"></select>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="working-days">Working Days</label>
+                <input id="working-days" type="number" step="1" inputmode="numeric" placeholder="Leave empty for auto" />
+                <p class="field-hint">Must be between 1 and 31 (or blank for auto).</p>
+                <p class="error-text" id="working-days-error"></p>
+                <p class="warning-text" id="ot-warning" style="display:none;"></p>
+              </div>
+
+              <!-- Increment moved below -->
+              <div class="field">
+                <label class="field-label" for="percent-increment">Increment (%)</label>
+                <input id="percent-increment" type="number" step="0.01" inputmode="decimal" placeholder="0 (optional)" />
+              </div>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">Bonuses & Deductions</div>
+              <span class="badge-soft">Optional</span>
+            </div>
+
+            <div class="section-body">
+              <div class="field">
+                <label class="field-label">Bonuses</label>
+                <div class="checkbox-row">
+                  <label><input type="checkbox" id="attendance-bonus" /> Attendance Bonus (৳525)</label>
+                  <label><input type="checkbox" id="gildan-bonus" /> Gildan Bonus (৳400)</label>
                 </div>
               </div>
 
               <div class="field">
-                <label class="field-label">Select Month</label>
-                <select id="month-select" class="uniform"></select>
+                <label class="field-label">Deductions</label>
+                <div class="checkbox-row">
+                  <label><input type="checkbox" id="provident-fund" /> Provident Fund (7% of basic)</label>
+                </div>
               </div>
+            </div>
+          </section>
 
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">Monthly Expenses</div>
+              <span class="badge-soft">Optional</span>
+            </div>
+
+            <div class="section-body">
               <div class="field">
-                <label class="field-label">OT Rate per Hour ($)</label>
-                <div class="input-row" style="align-items:center;">
-                  <div style="flex:1" class="with-prefix">
-                    <span class="prefix">$</span>
-                    <input id="ot-rate" class="uniform" type="number" step="0.01" placeholder="" inputmode="decimal" />
+                <label class="field-label">Add Expense</label>
+                <div class="pill-row">
+                  <input id="expense-name" class="pill-input" type="text" placeholder="Expense name" />
+                  <select id="expense-category" class="pill-input">
+                    <option value="Rent">Rent</option>
+                    <option value="Food">Food</option>
+                    <option value="Bank">Bank</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Family">Family</option>
+                    <option value="Savings">Savings</option>
+                    <option value="Other" selected>Other</option>
+                  </select>
+                  <div class="input-wrap" style="position:relative;">
+                    <span class="prefix">৳</span>
+                    <input id="expense-amount" class="pill-input" type="number" step="0.01" inputmode="decimal" placeholder="0.00" style="padding-left:30px;" />
                   </div>
-                  <div style="width:86px; display:flex; align-items:center;">
-                    <label style="display:flex; gap:8px; align-items:center;">
-                      <input id="auto-ot" type="checkbox" checked />
-                      <span style="font-weight:600; color:#475569;">Auto</span>
-                    </label>
-                  </div>
+                  <button type="button" id="add-expense-btn" class="btn btn-primary">Add</button>
+                </div>
+
+                <div class="quick-row">
+                  <span>Quick:</span>
+                  <button type="button" class="btn-small" data-quick-expense="Rent">Rent</button>
+                  <button type="button" class="btn-small" data-quick-expense="Food">Food</button>
+                  <button type="button" class="btn-small" data-quick-expense="Bank">Bank</button>
+                  <button type="button" class="btn-small" data-quick-expense="Transport">Transport</button>
+                  <button type="button" class="btn-small" data-quick-expense="Family">Family</button>
+                  <button type="button" class="btn-small" data-quick-expense="Savings">Savings</button>
+                  <button type="button" class="btn-small" data-quick-expense="Other">Other</button>
                 </div>
               </div>
 
               <div class="field">
-                <label class="field-label">Select Year</label>
-                <select id="year-select" class="uniform"></select>
+                <label class="field-label">Expenses List</label>
+                <span class="field-hint">Sorted by name (A → Z). Shows % of income.</span>
+                <div id="expense-list" class="expense-list">
+                  <div style="font-size:0.78rem;color:var(--muted);">No expenses added yet.</div>
+                </div>
               </div>
 
-              <div class="field">
-                <label class="field-label">Percent Increment (%)</label>
-                <input id="percent-increment" class="uniform" type="number" step="0.01" placeholder="e.g., 5" />
-              </div>
-
-              <div class="field">
-                <label class="field-label">Number of Working Days</label>
-                <input id="working-days" class="uniform" type="number" placeholder="Auto-calculated if blank" />
+              <div class="mini-summary">
+                <span>Essential: <strong id="essential-total">৳0</strong></span>
+                <span>Non-essential: <strong id="nonessential-total">৳0</strong></span>
               </div>
             </div>
+          </section>
+        </div>
 
-            <div style="margin-top:12px;">
-              <h3 style="font-size:14px; margin-bottom:8px;">Bonuses & Deductions</h3>
-              <div class="checks">
-                <label><input id="attendance-bonus" type="checkbox" /> <span style="font-weight:600; margin-left:8px;">Include Attendance Bonus ($525)</span></label>
-                <label><input id="gildan-bonus" type="checkbox" /> <span style="font-weight:600; margin-left:8px;">Include Gildan Bonus ($400)</span></label>
-                <label><input id="provident-fund" type="checkbox" checked /> <span style="font-weight:600; margin-left:8px;">Include Provident Fund (7% of basic)</span></label>
-          
-              </div>
+        <div class="col-right">
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">Summary</div>
+              <span class="badge-soft">Result</span>
             </div>
 
-            <!-- Glass pill bar -->
-            <div class="pill-bar" aria-label="Add expense pill">
-              <div class="pill-section pill-left">
-                <input id="expense-name" class="pill-input" type="text" placeholder="Expense name (e.g., Rent)" />
+            <div class="section-body">
+              <div class="summary-grid">
+                <div class="summary-block">
+                  <div class="summary-label">Basic Salary</div>
+                  <div id="basic-salary-display" class="summary-value">৳0</div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">House Rent</div>
+                  <div id="house-rent-display" class="summary-value">৳0</div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">Medical</div>
+                  <div id="medical-display" class="summary-value">৳0</div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">Food Allowance</div>
+                  <div id="food-display" class="summary-value">৳0</div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">Transport</div>
+                  <div id="transportation-cost-display" class="summary-value">৳0</div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">OT Pay</div>
+                  <div id="ot-pay-display" class="summary-value">৳0</div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">Bonuses</div>
+                  <div class="summary-value">
+                    Attendance: <span id="attendance-bonus-display">৳0</span><br>
+                    Gildan: <span id="gildan-bonus-display">৳0</span>
+                  </div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">Increment & PF</div>
+                  <div class="summary-value">
+                    Increment: <span id="increment-pay-display">৳0</span><br>
+                    PF: <span id="provident-fund-display">-৳0</span>
+                  </div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">Net Income (Before Expenses)</div>
+                  <div id="total-income-display" class="summary-value">৳0</div>
+                </div>
+                <div class="summary-block">
+                  <div class="summary-label">Total Expenses</div>
+                  <div id="total-expenses-display" class="summary-value">-৳0</div>
+                </div>
+                <div class="summary-block" style="grid-column:1/-1;">
+                  <div class="summary-label">Final Balance</div>
+                  <div id="final-balance-display" class="summary-final balance-green">৳0</div>
+                </div>
               </div>
 
-              <div class="pill-divider" aria-hidden="true"></div>
-
-              <div class="pill-section pill-middle">
-                <span style="color:#94a3b8;font-weight:600;">$</span>
-                <input id="expense-amount" class="pill-input" type="number" placeholder="0.00" inputmode="decimal" style="width:100%;" />
+              <div class="progress-wrap">
+                <div class="progress-labels">
+                  <span id="expenses-percent-text">Expenses: 0% of income</span>
+                  <span id="savings-percent-text">Savings: 100% of income</span>
+                </div>
+                <div class="progress-bar">
+                  <div id="expenses-progress" class="progress-expenses"></div>
+                </div>
               </div>
 
-              <div class="pill-divider" aria-hidden="true"></div>
+              <div class="summary-footer">
+                <div>
+                  Status:
+                  <span id="balance-status" class="status-pill">Not calculated</span>
+                </div>
+                <div>
+                  OT hours this month:
+                  <strong id="ot-hours-display">0</strong>
+                </div>
+              </div>
 
-              <div class="pill-section pill-right" style="background:transparent;">
-                <button id="add-expense-btn" class="pill-add" aria-label="Add expense">Add</button>
+              <div class="actions-row">
+                <button type="button" id="reset-btn" class="btn btn-ghost">Reset</button>
               </div>
             </div>
-
-            <div id="expense-list" class="expense-list" aria-live="polite"></div>
-          </div>
-        </section>
-
-        <!-- RIGHT: Detailed Breakdown (restored style) -->
-        <aside>
-          <div class="summary-wrap">
-            <div class="summary-card" aria-labelledby="detailed-title">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <div id="detailed-title" style="font-weight:700;">Salary Overview</div>
-                <div style="color:var(--muted); font-size:13px;">Overview</div>
-              </div>
-
-              <div class="summary-row"><div class="summary-label">Basic Salary</div><div id="basic-salary-display" class="summary-value">$0.00</div></div>
-              <div class="summary-row"><div class="summary-label">House Rent</div><div id="house-rent-display" class="summary-value">$0.00</div></div>
-              <div class="summary-row"><div class="summary-label">Medical</div><div id="medical-display" class="summary-value">$0.00</div></div>
-              <div class="summary-row"><div class="summary-label">Food</div><div id="food-display" class="summary-value">$0.00</div></div>
-              <div class="summary-row"><div class="summary-label">Transportation</div><div id="transportation-cost-display" class="summary-value">$0.00</div></div>
-            </div>
-
-            <div class="summary-card">
-              <div class="summary-row"><div class="summary-label">Total OT Pay</div><div id="ot-pay-display" class="summary-value">$0.00</div></div>
-              <div class="summary-row"><div class="summary-label">Attendance Bonus</div><div id="attendance-bonus-display" class="summary-value">+$0.00</div></div>
-              <div class="summary-row"><div class="summary-label">Gildan Bonus</div><div id="gildan-bonus-display" class="summary-value">+$0.00</div></div>
-              <div class="summary-row"><div class="summary-label">Increment Pay</div><div id="increment-pay-display" class="summary-value">+$0.00</div></div>
-              <div class="summary-row"><div class="summary-label">Provident Fund Deduction</div><div id="provident-fund-display" class="summary-value">-$0.00</div></div>
-
-              <div style="height:8px"></div>
-
-              <div class="summary-row" style="border-top:1px dashed rgba(8,16,40,0.03); padding-top:12px;">
-                <div style="font-weight:700; color:var(--muted);">Net Income (Before Expenses)</div>
-                <div id="total-income-display" class="summary-highlight">$0.00</div>
-              </div>
-
-              <div style="height:8px"></div>
-              <div class="summary-row"><div class="summary-label">Total Expenses</div><div id="total-expenses-display" class="summary-expense">-$0.00</div></div>
-
-              <div style="height:10px"></div>
-              <div class="summary-row" style="border-top:1px solid rgba(8,16,40,0.04); padding-top:12px;">
-                <div style="font-weight:800; color:var(--muted);">Final Balance</div>
-                <div id="final-balance-display" class="summary-final">$0.00</div>
-              </div>
-            </div>
-          </div>
-        </aside>
+          </section>
+        </div>
       </div>
     </main>
   </div>
 
-  <!-- ---------- Logic JS ---------- -->
   <script>
-    // constants
     const OT_COEF_A = 0.006409;
     const OT_COEF_B = -15.69;
     const DAILY_OT_HOURS = 2;
     const PROVIDENT_FUND_RATE = 0.07;
     const ATTENDANCE_BONUS_VALUE = 525;
     const GILDAN_BONUS_VALUE = 400;
-    const STORAGE_KEY = 'gildan_final_v1';
+    const STORAGE_KEY = 'gildan_income_v2';
 
-    // DOM refs
     const grossSalaryInput = document.getElementById('gross-salary');
-    const otRateInput = document.getElementById('ot-rate');
-    const autoOtCheckbox = document.getElementById('auto-ot');
     const percentIncrementInput = document.getElementById('percent-increment');
     const monthSelect = document.getElementById('month-select');
     const yearSelect = document.getElementById('year-select');
     const workingDaysInput = document.getElementById('working-days');
+    const otRateInput = document.getElementById('ot-rate');
+    const autoOtBtn = document.getElementById('auto-ot-btn');
 
     const attendanceBonusCheckbox = document.getElementById('attendance-bonus');
     const gildanBonusCheckbox = document.getElementById('gildan-bonus');
     const providentFundCheckbox = document.getElementById('provident-fund');
-    const showGrossBreakdownCheckbox = document.getElementById('show-gross-breakdown');
 
-    const expenseName = document.getElementById('expense-name');
-    const expenseAmount = document.getElementById('expense-amount');
+    const expenseNameInput = document.getElementById('expense-name');
+    const expenseAmountInput = document.getElementById('expense-amount');
+    const expenseCategorySelect = document.getElementById('expense-category');
     const addExpenseBtn = document.getElementById('add-expense-btn');
     const expenseList = document.getElementById('expense-list');
+    const essentialTotalEl = document.getElementById('essential-total');
+    const nonessentialTotalEl = document.getElementById('nonessential-total');
 
     const basicSalaryDisplay = document.getElementById('basic-salary-display');
     const houseRentDisplay = document.getElementById('house-rent-display');
     const medicalDisplay = document.getElementById('medical-display');
     const foodDisplay = document.getElementById('food-display');
     const transportationCostDisplay = document.getElementById('transportation-cost-display');
-
     const otPayDisplay = document.getElementById('ot-pay-display');
     const attendanceBonusDisplay = document.getElementById('attendance-bonus-display');
     const gildanBonusDisplay = document.getElementById('gildan-bonus-display');
@@ -302,43 +849,145 @@
     const totalExpensesDisplay = document.getElementById('total-expenses-display');
     const finalBalanceDisplay = document.getElementById('final-balance-display');
 
+    const expensesPercentText = document.getElementById('expenses-percent-text');
+    const savingsPercentText = document.getElementById('savings-percent-text');
+    const expensesProgress = document.getElementById('expenses-progress');
+    const balanceStatus = document.getElementById('balance-status');
+    const otHoursDisplay = document.getElementById('ot-hours-display');
+
+    const grossError = document.getElementById('gross-error');
+    const workingDaysError = document.getElementById('working-days-error');
+    const otWarning = document.getElementById('ot-warning');
+
+    const resetBtn = document.getElementById('reset-btn');
+
+    const quickButtons = document.querySelectorAll('[data-quick-expense]');
+
+    const ESSENTIAL_CATS = new Set(['Rent','Food','Transport','Family']);
     let expenses = [];
     let editingIndex = -1;
-    let programmaticOtChange = false;
+    let lastNetIncomeBeforeExpenses = 0;
 
-    function fmt(v){ return '$' + (Number(v) || 0).toFixed(2); }
-    function fmtPlain(v){ return (Number(v) || 0).toFixed(2); }
-    function escapeHtml(s=''){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function formatCurrency(v){
+      const num = Number(v) || 0;
+      return '৳' + num.toLocaleString('en-IN',{maximumFractionDigits:0});
+    }
 
-    // months/years populate
-    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    months.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; monthSelect.appendChild(o); });
-    monthSelect.value = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    for(let y=currentYear-5; y<=currentYear+5; y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; yearSelect.appendChild(o); }
-    yearSelect.value = currentYear;
+    function formatPlain(v){
+      const num = Number(v) || 0;
+      return num.toLocaleString('en-IN',{maximumFractionDigits:0});
+    }
 
-    // persistence
+    function calcWorkingDaysForMonth(year, month){
+      year = Number(year); month = Number(month);
+      if(isNaN(year) || isNaN(month)) return 0;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      let count = 0;
+      for(let d=1; d<=daysInMonth; d++){
+        const day = new Date(year, month, d).getDay();
+        if(day !== 5) count++; // Friday off
+      }
+      return count;
+    }
+
+    function computeOtRateFromGross(gross){
+      const g = Number(gross) || 0;
+      if(!g) return 0;
+      const raw = (OT_COEF_A * g) + OT_COEF_B;
+      return Math.max(0, raw);
+    }
+
+    function clearErrors(){
+      grossError.textContent = '';
+      workingDaysError.textContent = '';
+      otWarning.textContent = '';
+      otWarning.style.display = 'none';
+      grossSalaryInput.classList.remove('invalid');
+      workingDaysInput.classList.remove('invalid');
+      grossSalaryInput.removeAttribute('title');
+      workingDaysInput.removeAttribute('title');
+    }
+
+    function validateForm(){
+      clearErrors();
+      let isValid = true;
+
+      const grossRaw = grossSalaryInput.value.trim();
+      const gross = Number(grossRaw);
+
+      if(!grossRaw || !(gross > 0)){
+        grossError.textContent = 'Please enter a valid gross salary (greater than 0).';
+        grossSalaryInput.classList.add('invalid');
+        grossSalaryInput.title = 'Please enter a gross salary greater than 0.';
+        isValid = false;
+      }
+
+      const wdRaw = workingDaysInput.value.trim();
+      let workingDaysOverride = null;
+      if(wdRaw !== ''){
+        const wd = Number(wdRaw);
+        if(!(wd >= 1 && wd <= 31)){
+          workingDaysError.textContent = 'Working days must be between 1 and 31.';
+          workingDaysInput.classList.add('invalid');
+          workingDaysInput.title = 'Enter a value from 1 to 31, or leave empty for auto.';
+          isValid = false;
+        }else{
+          workingDaysOverride = wd;
+        }
+      }
+
+      return { isValid, gross: gross || 0, workingDaysOverride };
+    }
+
+    function getWorkingDays(year, month, override){
+      if(typeof override === 'number') return override;
+      const auto = calcWorkingDaysForMonth(year, month);
+      return auto || 0;
+    }
+
+    function resetSummaryDisplays(){
+      const zero = formatCurrency(0);
+      basicSalaryDisplay.textContent = zero;
+      houseRentDisplay.textContent = zero;
+      medicalDisplay.textContent = zero;
+      foodDisplay.textContent = zero;
+      transportationCostDisplay.textContent = zero;
+      otPayDisplay.textContent = zero;
+      attendanceBonusDisplay.textContent = '৳0';
+      gildanBonusDisplay.textContent = '৳0';
+      incrementPayDisplay.textContent = '৳0';
+      providentFundDisplay.textContent = '-৳0';
+      totalIncomeDisplay.textContent = zero;
+      totalExpensesDisplay.textContent = '-৳0';
+      finalBalanceDisplay.textContent = zero;
+      finalBalanceDisplay.classList.remove('balance-green','balance-orange','balance-red');
+      finalBalanceDisplay.classList.add('balance-green');
+      expensesPercentText.textContent = 'Expenses: 0% of income';
+      savingsPercentText.textContent = 'Savings: 100% of income';
+      expensesProgress.style.width = '0%';
+      balanceStatus.textContent = 'Not calculated';
+      balanceStatus.classList.remove('safe','low','deficit');
+      otHoursDisplay.textContent = '0';
+    }
+
     function saveState(){
       try{
         const state = {
           inputs:{
             gross: grossSalaryInput.value,
-            ot: otRateInput.value,
-            autoOt: autoOtCheckbox.checked,
             percentIncrement: percentIncrementInput.value,
             month: monthSelect.value,
             year: yearSelect.value,
             workingDays: workingDaysInput.value,
+            otRate: otRateInput.value,
             attendanceBonus: attendanceBonusCheckbox.checked,
             gildanBonus: gildanBonusCheckbox.checked,
-            providentFund: providentFundCheckbox.checked,
-            showGrossBreakdown: showGrossBreakdownCheckbox.checked
+            providentFund: providentFundCheckbox.checked
           },
           expenses
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      }catch(e){ console.warn('save failed', e); }
+      }catch(e){}
     }
 
     function loadState(){
@@ -348,94 +997,190 @@
         const state = JSON.parse(raw);
         if(state.inputs){
           grossSalaryInput.value = state.inputs.gross || '';
-          otRateInput.value = state.inputs.ot || '';
-          autoOtCheckbox.checked = !!state.inputs.autoOt;
           percentIncrementInput.value = state.inputs.percentIncrement || '';
           monthSelect.value = state.inputs.month ?? monthSelect.value;
           yearSelect.value = state.inputs.year ?? yearSelect.value;
           workingDaysInput.value = state.inputs.workingDays || '';
+          otRateInput.value = state.inputs.otRate || '';
           attendanceBonusCheckbox.checked = !!state.inputs.attendanceBonus;
           gildanBonusCheckbox.checked = !!state.inputs.gildanBonus;
           providentFundCheckbox.checked = !!state.inputs.providentFund;
-          showGrossBreakdownCheckbox.checked = !!state.inputs.showGrossBreakdown;
         }
         if(Array.isArray(state.expenses)) expenses = state.expenses;
-      }catch(e){ console.warn('load failed', e); }
+      }catch(e){}
     }
 
-    // render expenses
+    function getSortedExpenses(){
+      const copy = expenses.slice();
+      copy.sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+      return copy;
+    }
+
     function renderExpenses(){
       expenseList.innerHTML = '';
       if(!expenses.length){
-        expenseList.innerHTML = '<div class="text-sm">No expenses added yet.</div>';
+        expenseList.innerHTML = '<div style="font-size:0.78rem;color:#64748b;">No expenses added yet.</div>';
+        essentialTotalEl.textContent = '৳0';
+        nonessentialTotalEl.textContent = '৳0';
         return;
       }
-      expenses.forEach((ex, idx) => {
-        const el = document.createElement('div');
-        el.className = 'expense-item';
-        el.innerHTML = `
-          <div class="expense-left">
-            <div style="width:8px;height:8px;border-radius:2px;background:#eef2ff;margin-right:8px;"></div>
-            <div class="expense-name" title="${escapeHtml(ex.name)}">${escapeHtml(ex.name)}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="expense-amount">-$${fmtPlain(ex.amount)}</div>
-            <button class="small-icon" data-edit="${idx}" title="Edit">✏️</button>
-            <button class="small-icon" data-del="${idx}" title="Delete">🗑️</button>
-          </div>
-        `;
-        expenseList.appendChild(el);
-      });
 
-      expenseList.querySelectorAll('[data-edit]').forEach(btn=>{
-        btn.addEventListener('click', ()=> {
-          const idx = Number(btn.getAttribute('data-edit'));
+      const sorted = getSortedExpenses();
+      let essentialTotal = 0;
+      let nonessentialTotal = 0;
+
+      sorted.forEach((ex, idx)=>{
+        const amount = Number(ex.amount) || 0;
+        const isEssential = ESSENTIAL_CATS.has(ex.category);
+        if(isEssential) essentialTotal += amount;
+        else nonessentialTotal += amount;
+
+        let pct = 0;
+        if(lastNetIncomeBeforeExpenses > 0){
+          pct = (amount / lastNetIncomeBeforeExpenses) * 100;
+        }
+        const pctLabel = pct > 0 ? pct.toFixed(1).replace(/\.0$/,'') : '0';
+
+        const container = document.createElement('div');
+        container.className = 'expense-item';
+
+        const main = document.createElement('div');
+        main.className = 'expense-main';
+
+        const title = document.createElement('div');
+        title.className = 'expense-title';
+        title.textContent = ex.name || 'Unnamed';
+
+        const meta = document.createElement('div');
+        meta.className = 'expense-meta';
+        meta.innerHTML =
+          '<span class="chip ' + (isEssential ? 'chip-essential' : 'chip-nonessential') + '">' + ex.category + '</span>' +
+          ' ' + formatCurrency(amount) + ' (' + pctLabel + '% of income)';
+
+        main.appendChild(title);
+        main.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'expense-actions';
+
+        const amountEl = document.createElement('div');
+        amountEl.className = 'expense-amount';
+        amountEl.textContent = '- ' + formatCurrency(amount);
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', ()=>{
           editingIndex = idx;
-          expenseName.value = expenses[idx].name;
-          expenseAmount.value = expenses[idx].amount;
+          expenseNameInput.value = ex.name;
+          expenseAmountInput.value = ex.amount;
+          expenseCategorySelect.value = ex.category || 'Other';
           addExpenseBtn.textContent = 'Update';
         });
-      });
-      expenseList.querySelectorAll('[data-del]').forEach(btn=>{
-        btn.addEventListener('click', ()=> {
-          const idx = Number(btn.getAttribute('data-del'));
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', ()=>{
           if(!confirm('Delete this expense?')) return;
           expenses.splice(idx,1);
-          renderExpenses();
-          calculateAll();
-          saveState();
+          editingIndex = -1;
+          addExpenseBtn.textContent = 'Add';
+          recalculate();
         });
+
+        actions.appendChild(amountEl);
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        container.appendChild(main);
+        container.appendChild(actions);
+        expenseList.appendChild(container);
       });
+
+      essentialTotalEl.textContent = formatCurrency(essentialTotal);
+      nonessentialTotalEl.textContent = formatCurrency(nonessentialTotal);
     }
 
-    // OT compute and working days
-    function computeOtRateFromGross(gross){
-      const g = Number(gross) || 0;
-      const raw = (OT_COEF_A * g) + OT_COEF_B;
-      if(!g) return ''; // blank if gross empty
-      return Math.max(0, raw);
-    }
+    function updateBalanceColorAndStatus(finalBalance, totalIncome){
+      finalBalanceDisplay.classList.remove('balance-green','balance-orange','balance-red');
+      balanceStatus.classList.remove('safe','low','deficit');
 
-    function calcWorkingDaysForMonth(year, month){
-      year = Number(year); month = Number(month);
-      if(isNaN(year) || isNaN(month)) return 0;
-      const dCount = new Date(year, month+1, 0).getDate();
-      let count = 0;
-      for(let d=1; d<=dCount; d++){
-        const day = new Date(year, month, d).getDay();
-        if(day !== 5) count++; // Friday off
+      if(finalBalance < 0){
+        finalBalanceDisplay.classList.add('balance-red');
+        balanceStatus.textContent = 'Deficit (expenses > income)';
+        balanceStatus.classList.add('deficit');
+      }else if(totalIncome <= 0){
+        finalBalanceDisplay.classList.add('balance-orange');
+        balanceStatus.textContent = 'No income set';
+      }else{
+        const ratio = finalBalance / totalIncome;
+        if(ratio < 0.10){
+          finalBalanceDisplay.classList.add('balance-orange');
+          balanceStatus.textContent = 'Balance low';
+          balanceStatus.classList.add('low');
+        }else{
+          finalBalanceDisplay.classList.add('balance-green');
+          balanceStatus.textContent = 'Healthy savings';
+          balanceStatus.classList.add('safe');
+        }
       }
-      return count;
     }
 
-    // main calc
-    function calculateAll(){
-      const gross = Number(grossSalaryInput.value) || 0;
-      const otRate = Number(otRateInput.value) || 0;
-      const percentInc = Number(percentIncrementInput.value) || 0;
+    function updateProgress(totalIncome, totalExpenses){
+      let expensePct = 0;
+      if(totalIncome > 0){
+        expensePct = Math.min(100, (totalExpenses / totalIncome) * 100);
+      }
+      const savingsPct = Math.max(0, 100 - expensePct);
+      const eLabel = expensePct.toFixed(1).replace(/\.0$/,'');
+      const sLabel = savingsPct.toFixed(1).replace(/\.0$/,'');
+      expensesPercentText.textContent = 'Expenses: ' + eLabel + '% of income';
+      savingsPercentText.textContent = 'Savings: ' + sLabel + '% of income';
+      expensesProgress.style.width = expensePct + '%';
+    }
 
-      let workingDays = Number(workingDaysInput.value) || 0;
-      if(!workingDays) workingDays = calcWorkingDaysForMonth(Number(yearSelect.value), Number(monthSelect.value));
+    function recalculate(){
+      const info = validateForm();
+      const isValid = info.isValid;
+      const gross = info.gross;
+      const workingDaysOverride = info.workingDaysOverride;
+
+      // auto OT rate from gross if empty or 0
+      if(gross > 0){
+        const currentOt = Number(otRateInput.value) || 0;
+        if(currentOt <= 0){
+          const otAuto = computeOtRateFromGross(gross);
+          otRateInput.value = otAuto ? otAuto.toFixed(2) : '';
+        }
+      }else{
+        otRateInput.value = '';
+      }
+
+      if(!isValid){
+        resetSummaryDisplays();
+        saveState();
+        renderExpenses();
+        return;
+      }
+
+      const year = Number(yearSelect.value) || new Date().getFullYear();
+      const month = Number(monthSelect.value) || new Date().getMonth();
+
+      const workingDays = getWorkingDays(year, month, workingDaysOverride);
+      workingDaysInput.placeholder = workingDaysOverride == null ? workingDays + ' days (auto)' : 'Leave empty for auto';
+
+      const totalOtHours = workingDays * DAILY_OT_HOURS;
+      otHoursDisplay.textContent = String(totalOtHours);
+      if(totalOtHours > 200){
+        otWarning.style.display = 'block';
+        otWarning.textContent = 'Warning: Calculated OT hours this month is ' + totalOtHours + ', which looks high (> 200). Please double-check.';
+      }else{
+        otWarning.style.display = 'none';
+      }
+
+      let otRate = Number(otRateInput.value) || 0;
+      const percentInc = Number(percentIncrementInput.value) || 0;
 
       const basic = gross * (9993 / 17440);
       const house = gross * (4997 / 17440);
@@ -459,101 +1204,148 @@
       const incrementPay = percentInc > 0 ? (gross * (percentInc / 100)) : 0;
       total += incrementPay;
 
-      const totalExpenses = expenses.reduce((s,e)=> s + (Number(e.amount) || 0), 0);
+      const totalExpenses = expenses.reduce((sum, ex)=> sum + (Number(ex.amount) || 0), 0);
       const finalBalance = total - totalExpenses;
 
-      // update UI
-      basicSalaryDisplay.textContent = fmt(basic);
-      houseRentDisplay.textContent = fmt(house);
-      medicalDisplay.textContent = fmt(medical);
-      foodDisplay.textContent = fmt(food);
-      transportationCostDisplay.textContent = fmt(transport);
+      lastNetIncomeBeforeExpenses = total;
 
-      otPayDisplay.textContent = fmt(totalOTPay);
-      attendanceBonusDisplay.textContent = (attendanceBonus ? '+' + fmtPlain(attendanceBonus) : '+' + fmtPlain(0));
-      gildanBonusDisplay.textContent = (gildanBonus ? '+' + fmtPlain(gildanBonus) : '+' + fmtPlain(0));
-      incrementPayDisplay.textContent = '+' + fmtPlain(incrementPay);
-      providentFundDisplay.textContent = '-' + fmtPlain(pfDeduction);
+      basicSalaryDisplay.textContent = formatCurrency(basic);
+      houseRentDisplay.textContent = formatCurrency(house);
+      medicalDisplay.textContent = formatCurrency(medical);
+      foodDisplay.textContent = formatCurrency(food);
+      transportationCostDisplay.textContent = formatCurrency(transport);
+      otPayDisplay.textContent = formatCurrency(totalOTPay);
+      attendanceBonusDisplay.textContent = formatPlain(attendanceBonus);
+      gildanBonusDisplay.textContent = formatPlain(gildanBonus);
+      incrementPayDisplay.textContent = formatPlain(incrementPay);
+      providentFundDisplay.textContent = '-৳' + formatPlain(pfDeduction);
+      totalIncomeDisplay.textContent = formatCurrency(total);
+      totalExpensesDisplay.textContent = '-৳' + formatPlain(totalExpenses);
+      finalBalanceDisplay.textContent = formatCurrency(finalBalance);
 
-      totalIncomeDisplay.textContent = fmt(total);
-      totalExpensesDisplay.textContent = '-' + fmtPlain(totalExpenses);
-      finalBalanceDisplay.textContent = fmt(finalBalance);
+      updateBalanceColorAndStatus(finalBalance, total);
+      updateProgress(total, totalExpenses);
 
-      // color-coded highlights applied via CSS classes (already set)
+      renderExpenses();
       saveState();
     }
 
-    // wire events
-    function wire(){
-      grossSalaryInput.addEventListener('input', ()=>{
-        if(autoOtCheckbox.checked){
-          programmaticOtChange = true;
-          const ot = computeOtRateFromGross(Number(grossSalaryInput.value) || 0);
-          otRateInput.value = ot === '' ? '' : ot.toFixed(2);
-          setTimeout(()=> programmaticOtChange = false, 10);
-        }
-        calculateAll();
+    function resetAll(){
+      localStorage.removeItem(STORAGE_KEY);
+      expenses = [];
+      editingIndex = -1;
+
+      grossSalaryInput.value = '';
+      percentIncrementInput.value = '';
+      workingDaysInput.value = '';
+      otRateInput.value = '';
+      attendanceBonusCheckbox.checked = false;
+      gildanBonusCheckbox.checked = false;
+      providentFundCheckbox.checked = false;
+
+      const now = new Date();
+      monthSelect.value = now.getMonth();
+      yearSelect.value = String(now.getFullYear());
+
+      addExpenseBtn.textContent = 'Add';
+      clearErrors();
+      resetSummaryDisplays();
+      renderExpenses();
+    }
+
+    function wireEvents(){
+      // auto recalc on input changes
+      [grossSalaryInput, percentIncrementInput, workingDaysInput, otRateInput].forEach(el=>{
+        el.addEventListener('input', recalculate);
       });
 
-      otRateInput.addEventListener('input', ()=>{
-        if(!programmaticOtChange && autoOtCheckbox.checked){
-          // user manually changed OT => disable auto
-          autoOtCheckbox.checked = false;
-        }
-        calculateAll();
+      [monthSelect, yearSelect, attendanceBonusCheckbox, gildanBonusCheckbox, providentFundCheckbox].forEach(el=>{
+        el.addEventListener('change', recalculate);
       });
 
-      percentIncrementInput.addEventListener('input', calculateAll);
-      workingDaysInput.addEventListener('input', calculateAll);
-      monthSelect.addEventListener('change', calculateAll);
-      yearSelect.addEventListener('change', calculateAll);
+      autoOtBtn.addEventListener('click', ()=>{
+        const gross = Number(grossSalaryInput.value) || 0;
+        const ot = computeOtRateFromGross(gross);
+        otRateInput.value = ot ? ot.toFixed(2) : '';
+        recalculate();
+      });
 
-      attendanceBonusCheckbox.addEventListener('change', calculateAll);
-      gildanBonusCheckbox.addEventListener('change', calculateAll);
-      providentFundCheckbox.addEventListener('change', calculateAll);
-      showGrossBreakdownCheckbox.addEventListener('change', calculateAll);
-
-      // add / update expense
       addExpenseBtn.addEventListener('click', ()=>{
-        const name = (expenseName.value || '').trim();
-        const amount = Number(expenseAmount.value) || 0;
-        if(!name){ alert('Please enter expense name'); return; }
-        if(!(amount > 0)){ alert('Please enter a positive amount'); return; }
+        const name = (expenseNameInput.value || '').trim();
+        const amount = Number(expenseAmountInput.value) || 0;
+        const category = expenseCategorySelect.value || 'Other';
+
+        if(!name){
+          alert('Please enter an expense name.');
+          return;
+        }
+        if(!(amount > 0)){
+          alert('Please enter a positive amount.');
+          return;
+        }
 
         if(editingIndex > -1){
-          expenses[editingIndex] = { name, amount };
+          expenses[editingIndex] = { name, amount, category };
           editingIndex = -1;
           addExpenseBtn.textContent = 'Add';
-        } else {
-          expenses.push({ name, amount });
+        }else{
+          expenses.push({ name, amount, category });
         }
-        expenseName.value = '';
-        expenseAmount.value = '';
-        renderExpenses();
-        calculateAll();
+
+        expenseNameInput.value = '';
+        expenseAmountInput.value = '';
+        expenseCategorySelect.value = category;
+
+        recalculate();
+      });
+
+      quickButtons.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const name = btn.getAttribute('data-quick-expense') || '';
+          expenseNameInput.value = name;
+          expenseCategorySelect.value = name;
+          expenseNameInput.focus();
+        });
+      });
+
+      resetBtn.addEventListener('click', ()=>{
+        if(confirm('Clear all fields and saved data?')){
+          resetAll();
+          recalculate();
+        }
       });
     }
 
-    // init
-    function init(){
-      loadState();
-      renderExpenses();
-      wire();
+    function populateMonthYear(){
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      months.forEach((m,i)=>{
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = m;
+        monthSelect.appendChild(opt);
+      });
 
-      if(autoOtCheckbox.checked){
-        const ot = computeOtRateFromGross(Number(grossSalaryInput.value) || 0);
-        programmaticOtChange = true;
-        otRateInput.value = ot === '' ? '' : ot.toFixed(2);
-        setTimeout(()=> programmaticOtChange = false, 10);
+      const currentYear = new Date().getFullYear();
+      for(let y=currentYear-5; y<=currentYear+5; y++){
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearSelect.appendChild(opt);
       }
 
-      calculateAll();
+      const now = new Date();
+      monthSelect.value = now.getMonth();
+      yearSelect.value = String(now.getFullYear());
+    }
+
+    function init(){
+      populateMonthYear();
+      loadState();
+      wireEvents();
+      recalculate(); // initial auto calc
     }
 
     init();
   </script>
 </body>
 </html>
-
-
-
